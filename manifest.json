@@ -5,6 +5,6 @@
   "description": "App-grid new tab page with clock and rotating wallpapers.",
   "icons": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" },
   "permissions": ["favicon"],
-  "host_permissions": ["https://*/*"],
+  "host_permissions": ["https://*/*", "http://*/*"],
   "chrome_url_overrides": { "newtab": "newtab.html" }
 }

@@ -1,48 +1,324 @@
-document.body.style.backgroundImage='url(bg/'+(1+Math.floor(Math.random()*12))+'.jpg)';
+document.body.style.backgroundImage='url(bg/'+BG[Math.floor(Math.random()*BG.length)]+')';
 const K='tiles',$=document.getElementById.bind(document);
-let T=JSON.parse(localStorage.getItem(K)||'null')||[{n:'Claude',u:'https://claude.ai'},{n:'Gmail',u:'https://mail.google.com'},{n:'YouTube',u:'https://youtube.com'}];
-let edit=0,di=null;
+let T=JSON.parse(localStorage.getItem(K)||'null')||[{n:'Claude',u:'https://claude.ai'}];
+let edit=0,di=null,cur=null;
 const save=()=>localStorage.setItem(K,JSON.stringify(T));
+const list=()=>cur===null?T:T[cur].f;
+const isIP=h=>/^\d+\.\d+\.\d+\.\d+$/.test(h)||h==='localhost';
+
+function dlg(msg,btns){return new Promise(r=>{
+  const o=document.createElement('div');o.className='ov';
+  o.onclick=e=>{if(e.target===o){o.remove();r(-1)}};
+  const d=document.createElement('div');d.className='dlg';
+  const p=document.createElement('p');p.textContent=msg;
+  const row=document.createElement('div');row.className='row';
+  btns.forEach((b,i)=>{const el=document.createElement('button');
+    el.textContent=b;if(i===0)el.className='p';
+    el.onclick=()=>{o.remove();r(i)};row.append(el)});
+  d.append(p,row);o.append(d);document.body.append(o);
+  row.firstChild.focus()})}
+
+function autotrim(src){return new Promise(res=>{
+ const im=new Image();
+ im.onload=()=>{
+  const S=512,c=document.createElement('canvas');
+  const w=im.naturalWidth,h=im.naturalHeight;
+  c.width=w;c.height=h;
+  const x=c.getContext('2d',{willReadFrequently:true});
+  x.drawImage(im,0,0);
+  let d;try{d=x.getImageData(0,0,w,h).data}catch(e){return res(src)}
+  const rows=new Int32Array(h),cols=new Int32Array(w);
+  for(let y=0;y<h;y++)for(let px=0;px<w;px++){
+    if(d[(y*w+px)*4+3]>200){rows[y]++;cols[px]++}}
+  const minR=Math.max(3,Math.round(w*0.01)),minC=Math.max(3,Math.round(h*0.01));
+  let t=0,b=h-1,l=0,r=w-1;
+  while(t<h&&rows[t]<minR)t++;
+  while(b>t&&rows[b]<minR)b--;
+  while(l<w&&cols[l]<minC)l++;
+  while(r>l&&cols[r]<minC)r--;
+  if(b<=t||r<=l)return res(src);
+  const cw=r-l+1,chh=b-t+1;
+  const pad=0.01,box=S*(1-pad*2);
+  const k=Math.min(box/cw,box/chh);
+  const o=document.createElement('canvas');o.width=o.height=S;
+  const ox=o.getContext('2d');
+  ox.imageSmoothingQuality='high';
+  ox.drawImage(im,l,t,cw,chh,(S-cw*k)/2,(S-chh*k)/2,cw*k,chh*k);
+  res(o.toDataURL('image/png'))};
+ im.onerror=()=>res(src);
+ im.src=src})}
+
+function pick(item){const f=document.createElement('input');f.type='file';f.accept='image/*';
+ f.onchange=()=>{const fr=new FileReader();fr.onload=async()=>{
+   item.ic=await autotrim(fr.result);localStorage.removeItem('ic:'+item.u);save();draw()};
+  fr.readAsDataURL(f.files[0])};f.click()}
+
+const toData=b=>new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(b)});
+
+async function resolve(t){
+  const ck='ic:'+t.u;
+  if(t.ic)return t.ic;
+  const c=localStorage.getItem(ck);if(c)return c;
+  const o=new URL(t.u),h=o.hostname;
+  const cand=[o.origin+'/apple-touch-icon.png',o.origin+'/favicon.ico'];
+  if(!isIP(h))cand.push('https://icons.duckduckgo.com/ip3/'+h.replace(/^www\./,'')+'.ico');
+  for(const u of cand){try{
+    const r=await fetch(u);if(!r.ok)continue;
+    const b=await r.blob();if(!b.type.startsWith('image')||b.size<100)continue;
+    const d=await toData(b);try{localStorage.setItem(ck,d)}catch(e){}
+    return d}catch(e){}}
+  return 'chrome-extension://'+chrome.runtime.id+'/_favicon/?pageUrl='+encodeURIComponent(t.u)+'&size=64'}
+
+function icon(d,t){
+  if(t.f){d.classList.add('fold');
+    t.f.slice(0,4).forEach(c=>{const m=document.createElement('img');
+      resolve(c).then(s=>m.src=s);d.append(m)});return}
+  const im=new Image();
+  im.onerror=()=>{im.remove();d.textContent=(t.n[0]||'?').toUpperCase()};
+  const fit=()=>{const r=im.naturalWidth/im.naturalHeight;
+    if(r>1.2||r<0.85)im.dataset.wide=1};
+  im.onload=fit;
+  resolve(t).then(s=>{im.src=s;if(im.complete&&im.naturalWidth)fit()});
+  d.append(im)}
+
+async function menu(t,L,i){
+  const c=await dlg(t.n,t.f?['Close','Rename']:['Close','Rename','Change URL','Change icon']);
+  if(c===1){const n=prompt('Name',t.n);if(n)t.n=n}
+  if(c===2){const u=prompt('URL',t.u);if(u){localStorage.removeItem('ic:'+t.u);t.u=u}}
+  if(c===3){const k=await dlg('Icon for '+t.n,['Default','Custom']);
+    if(k===1){pick(t);return}
+    if(k===0){t.ic=undefined;localStorage.removeItem('ic:'+t.u)}}
+  save();draw()}
+
 function draw(){
  const g=$('g');g.textContent='';
- T.forEach((t,i)=>{
-  const a=document.createElement('a');a.href=t.u;a.draggable=true;
+ $('back').style.display=cur===null?'none':'flex';
+ document.body.classList.toggle('e',!!edit);
+ const L=list();
+ L.forEach((t,i)=>{
+  const a=document.createElement(t.f?'div':'a');
+  if(!t.f)a.href=t.u;
+  a.draggable=true;a.className='tile';
   const d=document.createElement('div');d.className='i';
-  const im=new Image();
-  const ck='ic:'+t.u, cached=localStorage.getItem(ck);
-  const host=new URL(t.u).hostname.replace(/^www\./,'');
-  let stage=0;
-  if(cached){im.src=cached;stage=9}
-  else{im.src=t.ic||('https://'+host+'/apple-touch-icon.png');stage=t.ic?1:2}
-  const nx=()=>{
-    if(stage<2){stage=2;im.src='https://'+host+'/apple-touch-icon.png';return}
-    if(stage<2.5){stage=2.5;im.src='https://icons.duckduckgo.com/ip3/'+host+'.ico';return}
-    if(stage<2.8){stage=2.8;im.src='https://icons.duckduckgo.com/ip3/'+host+'.ico';return}
-    if(stage<3){stage=3;im.src='chrome-extension://'+chrome.runtime.id+'/_favicon/?pageUrl='+encodeURIComponent(t.u)+'&size=64';return}
-    im.remove();d.textContent=(t.n[0]||'?').toUpperCase()};
-  im.onload=()=>{
-    if(stage===1&&im.naturalWidth<=1){nx();return}
-    if(stage!==9&&im.naturalWidth>1){const u=im.src;
-      fetch(u).then(r=>r.blob()).then(b=>{const fr=new FileReader();
-        fr.onload=()=>{try{localStorage.setItem(ck,fr.result)}catch(e){}};
-        fr.readAsDataURL(b)}).catch(()=>{})}};
-  im.onerror=nx;
-  d.append(im);
+  icon(d,t);
   const s=document.createElement('span');s.textContent=t.n;
-  a.append(d,s);
-  a.ondragstart=()=>{di=i;a.classList.add('drag')};
-  a.ondragend=()=>{a.classList.remove('drag');save();draw()};
-  a.ondragover=e=>{e.preventDefault();if(di!==null&&di!==i){T.splice(i,0,T.splice(di,1)[0]);di=i;draw()}};
-  a.onclick=e=>{if(!edit)return;e.preventDefault();
-   const n=prompt('Name (leave empty to delete)',t.n);
-   if(n===null)return;
-   if(!n){T.splice(i,1)}else{t.n=n;t.u=prompt('URL',t.u)||t.u;
-    const ic=prompt('Icon image URL (blank = auto)',t.ic||'');if(ic!==null)t.ic=ic||undefined}
-   save();draw()};
+  const x=document.createElement('b');x.className='del';x.textContent='\u2212';
+  x.onclick=e=>{e.preventDefault();e.stopPropagation();L.splice(i,1);save();draw()};
+  a.append(d,s,x);
+  a.ondragstart=e=>{di=i;a.classList.add('drag');e.dataTransfer.effectAllowed='move'};
+  a.ondragend=()=>{a.classList.remove('drag');di=null;save();draw()};
+  a.ondragover=e=>e.preventDefault();
+  a.ondrop=e=>{e.preventDefault();e.stopPropagation();
+    if(di===null||di===i)return;
+    const src=L[di];
+    if(t.f&&!src.f){t.f.push(src);L.splice(di,1)}
+    else if(!t.f&&!src.f){const nf={n:'Folder',f:[t,src]};
+      L.splice(i,1,nf);L.splice(di>i?di:di,1)}
+    else L.splice(i,0,L.splice(di,1)[0]);
+    di=null;save();draw()};
+  a.onclick=e=>{
+    if(edit){e.preventDefault();e.stopPropagation();menu(t,L,i);return}
+    if(t.f){e.preventDefault();cur=T.indexOf(t);draw()}};
   g.append(a)})}
-$('add').onclick=()=>{const n=prompt('Name');if(!n)return;let u=prompt('URL');if(!u)return;
- if(!/^https?:/.test(u))u='https://'+u;T.push({n,u});save();draw()};
-$('ed').onclick=()=>{edit=!edit;$('ed').textContent=edit?'done':'edit';document.body.classList.toggle('e',!!edit)};
+
+document.body.onclick=e=>{$('mp').classList.remove('open');
+ if(edit&&!e.target.closest('.tile,#b,.dlg')){edit=0;draw()}};
+$('back').onclick=()=>{cur=null;draw()};
+$('add').onclick=async()=>{
+  const n=prompt('Name');if(!n)return;
+  let u=prompt('URL (leave blank to make a folder)');
+  if(u===null)return;
+  if(!u){list().push({n,f:[]});save();draw();return}
+  if(!/^https?:/.test(u))u='https://'+u;
+  const t={n,u};list().push(t);save();draw();
+  if(await dlg('Icon for '+n,['Default','Custom'])===1)pick(t)};
+$('ed').onclick=e=>{e.stopPropagation();edit=!edit;draw()};
 draw();
-const ck=()=>clk.textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:false});
-ck();setInterval(ck,10000);
+const pad=n=>String(n).padStart(2,'0');
+const tick=()=>{const d=new Date();
+  clk.textContent=pad(d.getHours())+':'+pad(d.getMinutes());
+  dt.textContent=d.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric',year:'numeric'})};
+tick();setInterval(tick,10000);
+
+function dl(name){const blob=new Blob([JSON.stringify({v:1,tiles:T},null,2)],{type:'application/json'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();
+ setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
+
+function imp(){const f=document.createElement('input');f.type='file';f.accept='application/json,.json';
+ f.onchange=()=>{const fr=new FileReader();fr.onload=()=>{try{
+   const d=JSON.parse(fr.result);const t=Array.isArray(d)?d:d.tiles;
+   if(!Array.isArray(t))throw 0;
+   T=t;cur=null;save();draw()}catch(e){alert('Not a valid profile file.')}};
+  fr.readAsText(f.files[0])};f.click()}
+
+const stamp=()=>new Date().toISOString().slice(0,10);
+$('menu').onclick=e=>{e.stopPropagation();$('mp').classList.toggle('open')};
+$('mp').onclick=e=>{e.stopPropagation();const k=e.target.dataset.a;if(!k)return;
+ $('mp').classList.remove('open');
+ if(k==='save')dl(localStorage.getItem('profname')||'homescreen-profile.json');
+ if(k==='saveas'){const n=prompt('File name','homescreen-'+stamp()+'.json');
+   if(n){localStorage.setItem('profname',n);dl(n)}}
+ if(k==='export')dl('homescreen-export-'+stamp()+'.json');
+ if(k==='import')imp();
+ if(k==='setloc')setLoc();
+ if(k==='clearwx'){localStorage.removeItem('wx');weather()}
+ if(k==='clearic'){Object.keys(localStorage).filter(x=>x.startsWith('ic:')).forEach(x=>localStorage.removeItem(x));draw()}};
+
+let WX=JSON.parse(localStorage.getItem('wxloc')||'null');
+const SV={
+ sun:'<circle cx="24" cy="24" r="9" fill="#ffd166"/><g stroke="#ffd166" stroke-width="3" stroke-linecap="round"><path d="M24 5v5M24 38v5M5 24h5M38 24h5M11 11l3.5 3.5M33.5 33.5L37 37M37 11l-3.5 3.5M14.5 33.5L11 37"/></g>',
+ partly:'<circle cx="18" cy="18" r="7.5" fill="#ffd166"/><g stroke="#ffd166" stroke-width="2.4" stroke-linecap="round"><path d="M18 4v3.5M4 18h3.5M8 8l2.5 2.5M28 8l-2.5 2.5"/></g><path d="M17 38h17a6.5 6.5 0 0 0 .6-12.9A9 9 0 0 0 17 27a5.5 5.5 0 0 0 0 11z" fill="#e8eef6"/>',
+ cloud:'<path d="M15 38h19a7 7 0 0 0 .7-14A10 10 0 0 0 15 26a6 6 0 0 0 0 12z" fill="#e8eef6"/>',
+ rain:'<path d="M15 30h19a7 7 0 0 0 .7-14A10 10 0 0 0 15 18a6 6 0 0 0 0 12z" fill="#dbe4ee"/><g stroke="#6db3f2" stroke-width="3" stroke-linecap="round"><path d="M18 35l-2 6M26 35l-2 6M34 35l-2 6"/></g>',
+ snow:'<path d="M15 30h19a7 7 0 0 0 .7-14A10 10 0 0 0 15 18a6 6 0 0 0 0 12z" fill="#dbe4ee"/><g stroke="#bfe2ff" stroke-width="2.6" stroke-linecap="round"><path d="M18 35v6M15 38h6M30 35v6M27 38h6"/></g>',
+ storm:'<path d="M15 28h19a7 7 0 0 0 .7-14A10 10 0 0 0 15 16a6 6 0 0 0 0 12z" fill="#cfd8e3"/><path d="M25 30l-6 8h5l-2 7 8-10h-5l3-5z" fill="#ffd166"/>',
+ fog:'<path d="M15 26h19a7 7 0 0 0 .7-14A10 10 0 0 0 15 14a6 6 0 0 0 0 12z" fill="#e0e6ee"/><g stroke="#cdd6e0" stroke-width="3" stroke-linecap="round"><path d="M12 33h24M15 40h20"/></g>'};
+const kind=c=>c===0?'sun':c<=2?'partly':c===3?'cloud':(c===45||c===48)?'fog':
+ (c>=71&&c<=77)||c===85||c===86?'snow':c>=95?'storm':'rain';
+const label=c=>c===0?'Clear':c<=2?'Partly cloudy':c===3?'Overcast':(c===45||c===48)?'Fog':
+ (c>=71&&c<=77)?'Snow':c>=95?'Thunderstorm':(c>=80?'Showers':(c>=51&&c<=57?'Drizzle':'Rain'));
+const svg=(c,s)=>'<svg viewBox="0 0 48 48" width="'+s+'" height="'+s+'">'+SV[kind(c)]+'</svg>';
+
+function paintWx(d){
+ wx.innerHTML=
+  '<div class=wnow>'+svg(d.code,44)+
+   '<div class=wcol><span class=wt>'+Math.round(d.t)+'\u00B0</span>'+
+   '<span class=wd>'+label(d.code)+'</span></div></div>'+
+  '<div class=wr>'+Math.round(d.lo)+'\u00B0 / '+Math.round(d.hi)+'\u00B0'+
+   (d.pp!=null?'  \u00B7  '+d.pp+'% rain':'')+'</div>'+
+  '<div class=wf>'+d.f.map(h=>
+   '<div class=wfi><span class=wh>'+h.hr+'</span>'+svg(h.code,26)+
+   '<span class=wtm>'+Math.round(h.t)+'\u00B0</span>'+
+   '<span class=wpp>'+h.p+'%</span></div>').join('')+'</div>'}
+
+function setLoc(){
+ const o=document.createElement('div');o.className='ov';
+ const d=document.createElement('div');d.className='dlg loc';
+ d.innerHTML='<p>Weather location</p><input id=lq placeholder="Type a town or city" autocomplete=off>'+
+  '<div id=lr class=lres></div><div class=row><button id=lc>Cancel</button></div>';
+ o.append(d);document.body.append(o);
+ o.onclick=e=>{if(e.target===o)o.remove()};
+ d.querySelector('#lc').onclick=()=>o.remove();
+ const q=d.querySelector('#lq'),res=d.querySelector('#lr');
+ let tm=null;
+ const run=async()=>{
+  const v=q.value.trim();res.textContent='';
+  if(v.length<2)return;
+  res.textContent='Searching...';
+  try{
+   const r=await fetch('https://geocoding-api.open-meteo.com/v1/search?count=6&name='+encodeURIComponent(v));
+   const j=await r.json();res.textContent='';
+   if(!j.results||!j.results.length){res.textContent='No matches';return}
+   j.results.forEach(g=>{
+    const it=document.createElement('div');it.className='lit';
+    it.textContent=[g.name,g.admin1,g.country].filter(Boolean).join(', ');
+    it.onclick=()=>{
+     WX={lat:g.latitude,lon:g.longitude,name:g.name};
+     localStorage.setItem('wxloc',JSON.stringify(WX));
+     localStorage.removeItem('wx');o.remove();weather()};
+    res.append(it)})}
+  catch(e){res.textContent='Lookup failed'}};
+ q.oninput=()=>{clearTimeout(tm);tm=setTimeout(run,350)};
+ q.onkeydown=e=>{if(e.key==='Enter'){clearTimeout(tm);run()}};
+ setTimeout(()=>q.focus(),30)}
+
+async function weather(){
+ if(!WX){wx.innerHTML='<div class=wset>Set location for weather</div>';
+  wx.querySelector('.wset').onclick=setLoc;return}
+ const c=JSON.parse(localStorage.getItem('wx')||'null');
+ if(c&&c.f&&Date.now()-c.ts<1800000){paintWx(c);return}
+ try{
+  const u='https://api.open-meteo.com/v1/forecast?latitude='+WX.lat+'&longitude='+WX.lon+
+   '&current=temperature_2m,weather_code,precipitation_probability'+
+   '&hourly=temperature_2m,weather_code,precipitation_probability'+
+   '&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&timezone=auto&forecast_days=2';
+  const r=await fetch(u);const j=await r.json();
+  const now=new Date(j.current.time);
+  let i=j.hourly.time.findIndex(t=>new Date(t)>now);
+  if(i<0)i=0;
+  const f=[3,6,9].map(o=>{const k=i+o-1;
+   const dt=new Date(j.hourly.time[k]);
+   return{hr:String(dt.getHours()).padStart(2,'0')+':00',
+    t:j.hourly.temperature_2m[k],code:j.hourly.weather_code[k],
+    p:j.hourly.precipitation_probability[k]??0}});
+  const sun=[];
+  for(let n=0;n<2;n++){sun.push(['rise',j.daily.sunrise[n]],['set',j.daily.sunset[n]])}
+  const d={sun,t:j.current.temperature_2m,code:j.current.weather_code,
+   pp:j.current.precipitation_probability,
+   hi:j.daily.temperature_2m_max[0],lo:j.daily.temperature_2m_min[0],f,ts:Date.now()};
+  localStorage.setItem('wx',JSON.stringify(d));paintWx(d);solar()}
+ catch(e){}}
+weather();setInterval(weather,1800000);
+const ENGINES=[
+ {n:'DuckDuckGo',u:'https://duckduckgo.com/?q=',h:'duckduckgo.com'},
+ {n:'Google',u:'https://www.google.com/search?q=',h:'google.com'},
+ {n:'Brave',u:'https://search.brave.com/search?q=',h:'search.brave.com'},
+ {n:'Bing',u:'https://www.bing.com/search?q=',h:'bing.com'},
+ {n:'Startpage',u:'https://www.startpage.com/sp/search?query=',h:'startpage.com'},
+ {n:'Wikipedia',u:'https://en.wikipedia.org/w/index.php?search=',h:'wikipedia.org'}];
+let SE=JSON.parse(localStorage.getItem('engine')||'null')||ENGINES[0];
+function paintSE(){
+ ddg.src='https://icons.duckduckgo.com/ip3/'+SE.h+'.ico';
+ ddg.title=SE.n;sq.placeholder='Search '+SE.n}
+paintSE();
+ddg.onclick=async e=>{e.preventDefault();e.stopPropagation();
+ const names=ENGINES.map(x=>x.n).concat('Custom...');
+ const k=await dlg('Search engine',names);
+ if(k<0)return;
+ if(k===ENGINES.length){
+  const u=prompt('Search URL with query at the end','https://example.com/search?q=');
+  if(!u)return;
+  let h;try{h=new URL(u).hostname.replace(/^www\./,'')}catch(err){alert('Invalid URL');return}
+  SE={n:h,u,h}}
+ else SE=ENGINES[k];
+ localStorage.setItem('engine',JSON.stringify(SE));paintSE()};
+sb.onsubmit=e=>{e.preventDefault();const v=sq.value.trim();
+ if(v)location.href=SE.u+encodeURIComponent(v)};
+
+const SUNSVG={
+ rise:'<defs><linearGradient id="gr" x1="0" y1="0" x2="0" y2="1">'+
+  '<stop offset="0" stop-color="#ffe08a"/><stop offset="1" stop-color="#ffb64d"/></linearGradient></defs>'+
+  '<g stroke="url(#gr)" stroke-width="2.6" stroke-linecap="round">'+
+  '<path d="M20 5v5M8.5 10.5l3 3M31.5 10.5l-3 3"/></g>'+
+  '<path d="M12 25a8 8 0 0 1 16 0z" fill="url(#gr)"/>'+
+  '<path d="M4 27h32" stroke="#ffd8a0" stroke-width="2.6" stroke-linecap="round"/>',
+ set:'<defs><linearGradient id="gs" x1="0" y1="0" x2="0" y2="1">'+
+  '<stop offset="0" stop-color="#ffb36b"/><stop offset="1" stop-color="#f2683c"/></linearGradient></defs>'+
+  '<g stroke="url(#gs)" stroke-width="2.6" stroke-linecap="round">'+
+  '<path d="M20 5v5M8.5 10.5l3 3M31.5 10.5l-3 3"/></g>'+
+  '<path d="M12 25a8 8 0 0 1 16 0z" fill="url(#gs)"/>'+
+  '<path d="M4 27h32" stroke="#ffc39a" stroke-width="2.6" stroke-linecap="round"/>'};
+
+function solar(){
+ const d=JSON.parse(localStorage.getItem('wx')||'null');
+ if(!d||!d.sun){sol.innerHTML='';return}
+ const now=Date.now();
+ const nxt=d.sun.map(([k,t])=>[k,new Date(t).getTime()])
+   .filter(x=>x[1]>now).sort((a,b)=>a[1]-b[1])[0];
+ if(!nxt){sol.innerHTML='';return}
+ const mins=Math.round((nxt[1]-now)/60000);
+ const hh=Math.floor(mins/60),mm=mins%60;
+ const at=new Date(nxt[1]).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:false});
+ sol.innerHTML='<div class=solbox><svg viewBox="0 0 40 38" width="38" height="38">'+SUNSVG[nxt[0]]+'</svg>'+
+  '<div class=scol><span class=sl>'+(nxt[0]==='rise'?'Sunrise':'Sunset')+' '+at+'</span>'+
+  '<span class=sc>in '+(hh?hh+'h ':'')+mm+'m</span></div></div>'}
+solar();setInterval(solar,60000);
+
+async function batt(){
+ if(!navigator.getBattery){bat.innerHTML='';return}
+ try{const b=await navigator.getBattery();
+  const paint=()=>{const p=Math.round(b.level*100);
+   const fill=p>20?'#7ddc8a':'#ff6b5a';
+   bat.innerHTML='<svg viewBox="0 0 40 20" width="34" height="17">'+
+    '<rect x="1" y="2.5" width="32" height="15" rx="4" fill="none" stroke="#ffffffcc" stroke-width="2"/>'+
+    '<rect x="35" y="7" width="3.5" height="6" rx="1.5" fill="#ffffffcc"/>'+
+    '<rect x="4" y="5.5" width="'+(26*p/100)+'" height="9" rx="2" fill="'+fill+'"/>'+
+    (b.charging?'<path d="M19 4.5l-5 6.5h3.5l-1.5 5 5-6.5h-3.5z" fill="#12331a"/>':'')+
+    '</svg><span class=bl>'+p+'%</span>'};
+  paint();
+  b.addEventListener('levelchange',paint);
+  b.addEventListener('chargingchange',paint);
+  setInterval(async()=>{try{const nb=await navigator.getBattery();
+   if(nb!==b){batt();return}paint()}catch(e){}},20000)}
+ catch(e){bat.innerHTML=''}}
+batt();
