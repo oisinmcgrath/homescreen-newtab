@@ -314,3 +314,22 @@ after any such change or the page renders black.
 The licence excludes compiling Unsplash photos to replicate a competing service. A
 wallpaper set inside a home-screen extension is not that, but it is the clause to
 re-read before adding images in bulk.
+
+## Identity
+
+**The mark is a browser tab whose page is a home screen grid.** Chosen over two
+alternatives: a single glass tile drawn with the extension's own `feTurbulence` filter,
+which was more distinctive but flattened to a plain coloured square at 16px, and a house
+cut out of a nine-tile grid, which was strongest at poster size and closed into noise when
+small. The tab silhouette was the only one of the three that survived every size a browser
+asks for.
+
+**There are two source SVGs, and that is deliberate.** `icon.svg` carries the full mark —
+a 3×2 grid, 3.4-unit stroke — and renders 128 and 48. At 16px that stroke falls below one
+pixel and the grid smudges, so `icon-small.svg` redraws the same idea at an optical size
+for small use: a 5.5-unit stroke and four larger tiles. `icon16.png` comes from that file.
+Editing one and re-rendering all three from it undoes the point.
+
+Both are rendered with `rsvg-convert` (librsvg). ImageMagick's own MSVG renderer is the
+fallback if librsvg is missing and produces noticeably worse output; check which delegate
+is in use before trusting a re-render.

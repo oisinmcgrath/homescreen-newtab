@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Optical size for 16-32px: heavier stroke, four larger tiles. The full mark's
+       strokes fall below a pixel at 16px and the 3x2 grid closes into a smudge. -->
+  <rect width="64" height="64" rx="12" fill="#1c2029"/>
+  <g transform="translate(7 8) scale(0.78)">
+    <path d="M5 20 a5 5 0 0 1 5-5 h9.5 l3.6-5 a3.5 3.5 0 0 1 2.8-1.4 h6.2 a3.5 3.5 0 0 1 2.8 1.4 L38.5 15 H54 a5 5 0 0 1 5 5 v30 a5 5 0 0 1-5 5 H10 a5 5 0 0 1-5-5 Z"
+          fill="none" stroke="#e8ecf1" stroke-width="5.5" stroke-linejoin="round"/>
+    <rect x="15" y="26" width="13" height="13" rx="4" fill="#4d9bf0"/>
+    <rect x="32" y="26" width="13" height="13" rx="4" fill="#e8ecf1" opacity=".5"/>
+    <rect x="15" y="42" width="13" height="13" rx="4" fill="#e8ecf1" opacity=".5"/>
+    <rect x="32" y="42" width="13" height="13" rx="4" fill="#e8ecf1" opacity=".5"/>
+  </g>
+</svg>

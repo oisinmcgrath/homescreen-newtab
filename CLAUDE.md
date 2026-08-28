@@ -21,7 +21,12 @@ See DECISIONS.md for why things are the way they are before changing them.
 - `bglist.js` — generated array of wallpaper filenames. Must be regenerated whenever
   files in `bg/` change (see Testing).
 - `bg/*.jpg` — wallpapers, one picked at random per tab load.
-- `icon.svg`, `icon16/48/128.png` — extension + tab favicon (house outline).
+- `icon.svg` — the mark: a browser tab whose page is a home screen grid, on a slate
+  badge. `icon128.png` and `icon48.png` render from it.
+- `icon-small.svg` — the same mark redrawn for 16px: heavier stroke, four larger
+  tiles. `icon16.png` renders from this one, not from `icon.svg`, whose strokes fall
+  below a pixel at that size. Re-render both after editing either:
+  `rsvg-convert -w 128 -h 128 icon.svg -o icon128.png` (and 48; 16 from the small one).
 
 ## Data model (localStorage, plus one IndexedDB entry)
 - `tiles` — `[{n, u, ic?}, ...]` or folders `{n, f:[...]}`. Name, URL, optional icon
