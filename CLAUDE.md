@@ -78,7 +78,9 @@ auto-trimmed and normalised to a 512px square by `autotrim()` before storage.
   is dismissed. Create a new profile confirms first, offers to save the current profile,
   then clears tiles, `feat`, `wxloc`, `wx` and `profname`.
 - Drag a tile onto another to create a folder; drag onto a folder to add. Back arrow
-  (top left) leaves a folder.
+  (top left) leaves a folder. To get a tile back out, drag it onto the back arrow, or
+  use "Move out of folder" in its edit-mode menu; either empties and removes the folder
+  if it was the last one in it.
 - Clicking the search-bar icon switches search engine (built-in list or custom URL).
 - A second bar at the bottom sends the typed question to a chat model. Clicking its
   icon switches model (Claude, ChatGPT, Gemini, Grok, Perplexity, or custom URL), the

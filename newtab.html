@@ -26,9 +26,9 @@ body.e .i{animation:w .4s infinite alternate}
 @keyframes w{from{transform:rotate(-1.5deg)}to{transform:rotate(1.5deg)}}
 #clk{position:fixed;top:8px;right:22px;font-size:84px;font-weight:300;text-shadow:0 2px 12px #000d,0 0 4px #000b,0 0 2px #000a}
 #dt{position:fixed;top:100px;right:24px;font-size:20px;font-weight:500;text-shadow:0 1px 8px #000e,0 0 3px #000c,0 0 1px #000b}
-#tl{position:fixed;top:2px;left:6px;z-index:4;display:flex;flex-direction:column;gap:12px;max-width:none;
+#tl{position:fixed;top:2px;left:6px;z-index:4;pointer-events:none;display:flex;flex-direction:column;gap:12px;max-width:none;
 text-shadow:0 1px 8px #000e,0 0 3px #000c}
-#sol{position:fixed;top:26px;left:0;width:calc(50% - min(280px,23vw));z-index:4;overflow:visible;
+#sol{position:fixed;top:26px;left:0;width:calc(50% - min(280px,23vw));z-index:4;pointer-events:none;overflow:visible;
 display:flex;align-items:center;justify-content:center;white-space:nowrap}
 #sol:empty{display:none}
 #sol{font-weight:500;text-shadow:0 1px 8px #000e,0 0 3px #000c,0 0 1px #000b}
@@ -70,7 +70,7 @@ align-items:flex-end;gap:6px;font-weight:500;text-shadow:0 1px 8px #000e,0 0 3px
 #wx .wset{font-size:14px;opacity:.85;cursor:pointer;border:1px solid #ffffff40;
 padding:7px 12px;border-radius:9px;backdrop-filter:blur(6px);background:#0000004d}
 #b{position:fixed;bottom:16px;right:16px;display:flex;gap:10px;z-index:3}
-#back{position:fixed;top:14px;left:18px;z-index:3;align-items:center;justify-content:center}
+#back{position:fixed;top:34px;left:14px;z-index:6;align-items:center;justify-content:center}
 #b button,#back{width:38px;height:38px;display:flex;align-items:center;justify-content:center;
 background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12);color:#fff;
 border-radius:50%;cursor:pointer;font-size:18px;line-height:1;opacity:.7;

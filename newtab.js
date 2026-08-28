@@ -239,14 +239,27 @@ function icon(d,t){
   resolve(t).then(s=>{im.src=s;if(im.complete&&im.naturalWidth)fit()});
   d.append(im)}
 
+// take a tile out of the open folder and put it back on the grid, dropping the
+// folder if that empties it
+function unfolder(L,i){
+  const t=L[i];if(cur===null||!t)return;
+  L.splice(i,1);T.push(t);
+  if(!L.length){T.splice(cur,1);cur=null}
+  save();draw()}
+
 async function menu(t,L,i){
-  const c=await dlg(t.n,t.f?['Close','Rename']:['Close','Rename','Change URL','Change icon']);
-  if(c===1){const n=await ask('Name for this shortcut',t.n,'Rename');if(n)t.n=n}
-  if(c===2){const u=await ask('Web address for '+t.n,t.u,'Change');
+  const opts=['Close','Rename'];
+  if(!t.f)opts.push('Change URL','Change icon');
+  if(cur!==null)opts.push('Move out of folder');
+  const c=await dlg(t.n,opts);
+  const k=opts[c];
+  if(k==='Rename'){const n=await ask('Name for this shortcut',t.n,'Rename');if(n)t.n=n}
+  if(k==='Change URL'){const u=await ask('Web address for '+t.n,t.u,'Change');
    if(u){localStorage.removeItem('ic:'+t.u);t.u=u}}
-  if(c===3){const k=await dlg('Icon for '+t.n,['Default','Custom']);
-    if(k===1){pick(t);return}
-    if(k===0){t.ic=undefined;localStorage.removeItem('ic:'+t.u)}}
+  if(k==='Change icon'){const j=await dlg('Icon for '+t.n,['Default','Custom']);
+    if(j===1){pick(t);return}
+    if(j===0){t.ic=undefined;localStorage.removeItem('ic:'+t.u)}}
+  if(k==='Move out of folder'){unfolder(L,i);return}
   save();draw()}
 
 function draw(){
@@ -293,6 +306,10 @@ $('wp').onclick=e=>{e.stopPropagation();const k=e.target.dataset.w;if(!k)return;
 document.body.onclick=e=>{$('mp').classList.remove('open');
  if(edit&&!e.target.closest('.tile,#b,#wp,.dlg')){edit=0;draw()}};
 $('back').onclick=()=>{cur=null;draw()};
+$('back').ondragover=e=>{if(cur!==null&&di!==null)e.preventDefault()};
+$('back').ondrop=e=>{e.preventDefault();e.stopPropagation();
+  if(cur===null||di===null)return;
+  const j=di;di=null;unfolder(list(),j)};
 $('add').onclick=async()=>{
   const n=await ask('Add a website shortcut to your home page. What should it be called?','','Next');
   if(!n)return;

@@ -333,3 +333,19 @@ Editing one and re-rendering all three from it undoes the point.
 Both are rendered with `rsvg-convert` (librsvg). ImageMagick's own MSVG renderer is the
 fallback if librsvg is missing and produces noticeably worse output; check which delegate
 is in use before trusting a re-render.
+
+**`#tl` and `#sol` are `pointer-events:none`.** Both are read-only displays, and both are
+far wider than what they draw — `#sol` in particular spans from the left edge to the
+search bar, with the pill merely centred inside it. At `z-index:4` that invisible box sat
+over the back arrow at `z-index:3` and swallowed every click on it, so leaving a folder
+did nothing. The arrow moved to `top:34px` and `z-index:6` as well, to clear the battery
+row it was overlapping. This is the second bug caused by `#sol` being wider than it looks;
+the first was the setup wizard spotlighting the whole strip instead of the pill.
+
+**A tile leaves a folder by being dragged onto the back arrow, or through its menu.**
+There was no way out at all before — tiles could go in and never come back. The arrow is
+a drop target because that is the gesture the drag-in uses, and `menu()` carries the same
+action for people who are not dragging. Emptying a folder deletes it, which is what
+happens on a phone, and avoids leaving an empty folder that can only be removed by hand.
+`menu()` now matches its options by label rather than index, so adding an option that only
+appears inside a folder cannot silently shift what the other indices mean.
