@@ -103,9 +103,14 @@ English (Australia)
 
 ## Data usage disclosures
 
-Tick **nothing** in the data collection list. The extension collects none of the
-listed categories — no personally identifiable information, health, financial,
-authentication, personal communications, location, web history, or user activity.
+Tick **Location**, and nothing else.
+
+Weather sends the coordinates of the city the user picked to open-meteo.com, which
+is location data leaving the device to a third party. It is coarse and user-chosen,
+but it falls inside Google's definition, and under-disclosing is what gets a listing
+rejected. Leave the rest unticked: no personally identifiable information, health,
+financial, authentication, personal communications, web history, user activity or
+website content.
 
 Certify all three:
 
