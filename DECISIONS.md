@@ -369,3 +369,38 @@ must fail.
 before it ends the user gesture and the prompt silently never appears. That is why the
 grant lives on a real button in Settings, and why the wizard calls it in the continuation
 of a dialog button rather than after further awaits.
+
+## Chrome Web Store submission
+
+Submitted 29 August 2026. Extension ID `anaifgacmmhenbdffpblhifbedmpigca`, published by
+`oisin.mcgrath.dev@gmail.com` under the display name Oisin McGrath, declared a
+**non-trader** account: the extension is free, unmonetised and published by an individual
+rather than a business. Declaring trader would have put a postal address on the public
+listing for no benefit. `store/listing.md` holds every value entered on the form.
+
+**Making host access optional removed a whole form field.** The Privacy tab asked for a
+written justification of `favicon` and `downloads` only — no justification was requested
+for `https://*/*` or `http://*/*`, because `optional_host_permissions` are not required
+ones. The single change most likely to have slowed the review simply stopped being part
+of it.
+
+**Location is declared in the data disclosures.** The earlier note in `store/listing.md`
+said to tick nothing, which was wrong: weather sends the coordinates of the city the user
+picked to open-meteo.com, and that is location data leaving the device to a third party.
+Coarse and user-chosen, but it falls inside Google's definition, and under-disclosure is
+what gets a listing rejected. Everything else is genuinely not collected.
+
+Three practical traps, all of which cost a round trip:
+
+- **A verified publisher contact email gates publishing entirely.** It lives on the
+  publisher Settings page, not the item, and both adding *and* verifying it are required;
+  until then `Submit for review` stays greyed with no explanation on the item pages.
+  `Why can't I submit?` is the only thing that names the cause.
+- **Test instructions cap at 500 characters**, far shorter than the 1000 allowed for each
+  justification.
+- **Store images must be 24-bit PNG with no alpha.** `rsvg-convert` emits RGBA, so
+  `icon128.png` had to be flattened onto its own background colour for the store icon
+  even though it is visually opaque already.
+
+Review is expected to be slower than average: new tab overrides are a known abuse category
+and get extra scrutiny. That is not a signal about this extension.
