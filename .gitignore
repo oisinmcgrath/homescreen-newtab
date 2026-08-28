@@ -3,3 +3,8 @@
 homescreen-*.json
 *-profile.json
 profiles/
+
+# Chrome Web Store build artefacts: the zip and resized listing images are
+# generated from what is already tracked.
+store/*.zip
+store/*.png
