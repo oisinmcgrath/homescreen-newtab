@@ -115,7 +115,10 @@ Certify all three:
 
 ## Privacy policy URL
 
-    https://oisinmcgrath.com/projects/homescreen/privacy.html
+    https://oisinmcgrath.com/projects/homescreen/privacy
+
+Cloudflare Pages strips `.html`, so the `.html` form 308-redirects here. Give the
+store the clean URL above so the policy resolves without a redirect.
 
 ## Homepage URL
 
