@@ -6,6 +6,29 @@ const save=()=>localStorage.setItem(K,JSON.stringify(T));
 const list=()=>cur===null?T:T[cur].f;
 const isIP=h=>/^\d+\.\d+\.\d+\.\d+$/.test(h)||h==='localhost';
 
+const feat=()=>JSON.parse(localStorage.getItem('feat')||'{}');
+function applyFeat(){const f=feat();
+ cb.style.display=f.llm===0?'none':'';
+ wx.style.display=f.wx===0?'none':'';
+ sol.style.display=f.sol===0?'none':''}
+
+function ask(msg,val,ok){return new Promise(r=>{
+  const o=document.createElement('div');o.className='ov';
+  const d=document.createElement('div');d.className='dlg loc';
+  d.innerHTML='<p></p><input id=aq autocomplete=off>'+
+   '<div class=row><button id=ac>Cancel</button><button id=ao class=p></button></div>';
+  d.querySelector('p').textContent=msg;
+  d.querySelector('#ao').textContent=ok||'Save';
+  const i=d.querySelector('#aq');i.value=val||'';
+  o.append(d);document.body.append(o);
+  const done=v=>{o.remove();r(v)};
+  o.onclick=e=>{if(e.target===o)done(null)};
+  d.querySelector('#ac').onclick=()=>done(null);
+  d.querySelector('#ao').onclick=()=>done(i.value.trim()||null);
+  i.onkeydown=e=>{if(e.key==='Enter')done(i.value.trim()||null);
+   if(e.key==='Escape')done(null)};
+  setTimeout(()=>{i.focus();i.select()},30)})}
+
 function dlg(msg,btns){return new Promise(r=>{
   const o=document.createElement('div');o.className='ov';
   o.onclick=e=>{if(e.target===o){o.remove();r(-1)}};
@@ -121,8 +144,18 @@ function draw(){
     if(t.f){e.preventDefault();cur=T.indexOf(t);draw()}};
   g.append(a)})}
 
+const WNAME={wx:'Weather',sol:'Sunrise/sunset',llm:'AI search bar'};
+function paintWp(){const f=feat();
+ $('wp').querySelectorAll('div').forEach(d=>{const k=d.dataset.w,on=f[k]!==0;
+  d.textContent=(on?'\u2713 ':'+ ')+WNAME[k];d.classList.toggle('on',on)})}
+$('wp').onclick=e=>{e.stopPropagation();const k=e.target.dataset.w;if(!k)return;
+ const f=feat();f[k]=f[k]===0?1:0;
+ localStorage.setItem('feat',JSON.stringify(f));
+ applyFeat();paintWp();
+ if(k==='wx'||k==='sol'){weather();solar()}};
+
 document.body.onclick=e=>{$('mp').classList.remove('open');
- if(edit&&!e.target.closest('.tile,#b,.dlg')){edit=0;draw()}};
+ if(edit&&!e.target.closest('.tile,#b,#wp,.dlg')){edit=0;draw()}};
 $('back').onclick=()=>{cur=null;draw()};
 $('add').onclick=async()=>{
   const n=prompt('Name');if(!n)return;
@@ -132,7 +165,7 @@ $('add').onclick=async()=>{
   if(!/^https?:/.test(u))u='https://'+u;
   const t={n,u};list().push(t);save();draw();
   if(await dlg('Icon for '+n,['Default','Custom'])===1)pick(t)};
-$('ed').onclick=e=>{e.stopPropagation();edit=!edit;draw()};
+$('ed').onclick=e=>{e.stopPropagation();edit=!edit;paintWp();draw()};
 draw();
 const pad=n=>String(n).padStart(2,'0');
 const tick=()=>{const d=new Date();
@@ -140,9 +173,12 @@ const tick=()=>{const d=new Date();
   dt.textContent=d.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric',year:'numeric'})};
 tick();setInterval(tick,10000);
 
-function dl(name){const blob=new Blob([JSON.stringify({v:1,tiles:T},null,2)],{type:'application/json'});
- const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();
- setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
+function dl(name,ask){const blob=new Blob([JSON.stringify({v:1,tiles:T},null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob),fn=/\.json$/i.test(name)?name:name+'.json';
+ const done=()=>setTimeout(()=>URL.revokeObjectURL(url),2000);
+ if(chrome.downloads&&chrome.downloads.download){
+  chrome.downloads.download({url,filename:fn,saveAs:!!ask},done);return}
+ const a=document.createElement('a');a.href=url;a.download=fn;a.click();done()}
 
 function imp(){const f=document.createElement('input');f.type='file';f.accept='application/json,.json';
  f.onchange=()=>{const fr=new FileReader();fr.onload=()=>{try{
@@ -153,13 +189,15 @@ function imp(){const f=document.createElement('input');f.type='file';f.accept='a
 
 const stamp=()=>new Date().toISOString().slice(0,10);
 $('menu').onclick=e=>{e.stopPropagation();$('mp').classList.toggle('open')};
-$('mp').onclick=e=>{e.stopPropagation();const k=e.target.dataset.a;if(!k)return;
+$('mp').onclick=async e=>{e.stopPropagation();const k=e.target.dataset.a;if(!k)return;
  $('mp').classList.remove('open');
- if(k==='save')dl(localStorage.getItem('profname')||'homescreen-profile.json');
- if(k==='saveas'){const n=prompt('File name','homescreen-'+stamp()+'.json');
+ if(k==='save'){const n=await ask('What would you like to call this profile?',
+   (localStorage.getItem('profname')||'homescreen-profile').replace(/\.json$/i,''));
    if(n){localStorage.setItem('profname',n);dl(n)}}
+ if(k==='saveas')dl('homescreen-'+stamp()+'.json',1);
  if(k==='export')dl('homescreen-export-'+stamp()+'.json');
  if(k==='import')imp();
+ if(k==='newprof')newProfile();
  if(k==='setloc')setLoc();
  if(k==='clearwx'){localStorage.removeItem('wx');weather()}
  if(k==='clearic'){Object.keys(localStorage).filter(x=>x.startsWith('ic:')).forEach(x=>localStorage.removeItem(x));draw()}};
@@ -225,6 +263,7 @@ function setLoc(){
  setTimeout(()=>q.focus(),30)}
 
 async function weather(){
+ const ft=feat();if(ft.wx===0&&ft.sol===0)return;
  if(!WX){wx.innerHTML='<div class=wset>Set location for weather</div>';
   wx.querySelector('.wset').onclick=setLoc;return}
  const c=JSON.parse(localStorage.getItem('wx')||'null');
@@ -278,9 +317,60 @@ ddg.onclick=async e=>{e.preventDefault();e.stopPropagation();
  localStorage.setItem('engine',JSON.stringify(SE));paintSE()};
 sb.onsubmit=e=>{e.preventDefault();const v=sq.value.trim();
  if(v)location.href=SE.u+encodeURIComponent(v)};
-resolve({u:'https://claude.ai'}).then(s=>cim.src=s);
+const LLMS=[
+ {n:'Claude',u:'https://claude.ai/new?q=',h:'claude.ai',c:'#9b8b74',b:'#f6f4edee'},
+ {n:'ChatGPT',u:'https://chatgpt.com/?q=',h:'chatgpt.com',c:'#6e6e80'},
+ {n:'Gemini',u:'https://gemini.google.com/app?q=',h:'gemini.google.com',c:'#8b7cf0'},
+ {n:'Grok',u:'https://grok.com/?q=',h:'grok.com',c:'#4a4a4a'},
+ {n:'Perplexity',u:'https://www.perplexity.ai/search?q=',h:'perplexity.ai',c:'#20808d'}];
+let LM=JSON.parse(localStorage.getItem('llm')||'null')||LLMS[0];
+function paintLM(){
+ resolve({u:'https://'+LM.h}).then(s=>cim.src=s);
+ cim.title=LM.n;cq.placeholder='Ask '+LM.n;
+ const e=LLMS.find(x=>x.h===LM.h);
+ cb.style.setProperty('--tint',e?e.c:'#8b93a1');
+ cb.style.background=e&&e.b?e.b:''}
+paintLM();
+cim.onclick=async e=>{e.preventDefault();e.stopPropagation();
+ const names=LLMS.map(x=>x.n).concat('Custom...');
+ const k=await dlg('Ask which model',names);
+ if(k<0)return;
+ if(k===LLMS.length){
+  const u=prompt('Chat URL with query at the end','https://example.com/?q=');
+  if(!u)return;
+  let h;try{h=new URL(u).hostname.replace(/^www\./,'')}catch(err){alert('Invalid URL');return}
+  LM={n:h,u,h}}
+ else LM=LLMS[k];
+ localStorage.setItem('llm',JSON.stringify(LM));paintLM()};
 cb.onsubmit=e=>{e.preventDefault();const v=cq.value.trim();
- if(v)location.href='https://claude.ai/new?q='+encodeURIComponent(v)};
+ if(v)location.href=LM.u+encodeURIComponent(v)};
+
+async function wizard(){
+ const f={};
+ let k=await dlg('Search engine',ENGINES.map(x=>x.n));
+ if(k>=0){SE=ENGINES[k];localStorage.setItem('engine',JSON.stringify(SE));paintSE()}
+ f.llm=await dlg('Include a search bar for your favourite AI assistant?',['Yes','No'])===1?0:1;
+ if(f.llm){k=await dlg('Which AI assistant?',LLMS.map(x=>x.n));
+  if(k>=0){LM=LLMS[k];localStorage.setItem('llm',JSON.stringify(LM));paintLM()}}
+ f.wx=await dlg('Would you like the weather widget on your home page?',['Yes','No'])===1?0:1;
+ f.sol=await dlg('Would you like the countdown to sunset/sunrise on your home page?',['Yes','No'])===1?0:1;
+ localStorage.setItem('feat',JSON.stringify(f));applyFeat();
+ if(f.wx||f.sol){if(!WX)setLoc();else weather()}}
+
+async function newProfile(){
+ const k=await dlg('Start a new profile? The tiles and settings in use now will be replaced.',
+  ['Cancel','Save current first','Continue']);
+ if(k<=0)return;
+ if(k===1){const n=await ask('What would you like to call this profile?',
+   (localStorage.getItem('profname')||'homescreen-profile').replace(/\.json$/i,''));
+  if(!n)return;
+  localStorage.setItem('profname',n);dl(n)}
+ T=[];cur=null;edit=0;save();
+ ['feat','wxloc','wx','profname'].forEach(x=>localStorage.removeItem(x));
+ WX=null;draw();wizard()}
+
+applyFeat();paintWp();
+if(!localStorage.getItem('feat'))wizard();
 
 const SUNSVG={
  rise:'<defs><linearGradient id="gr" x1="0" y1="0" x2="0" y2="1">'+

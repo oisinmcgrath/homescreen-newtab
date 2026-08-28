@@ -133,3 +133,55 @@ a softened form of Claude's UI bone (`#f6f4ed`, between `#f0eee6` and white) ins
 the logo clay `#d97757`, and a pale beige is invisible at a 6% wash on white — so the mix is bypassed
 and `--tint` stays a warm taupe `#9b8b74` purely to keep the inset hairline and the caret
 visible against the cream. Anything paler than that taupe makes the caret vanish.
+
+**The Claude bar became a model switcher, mirroring `ENGINES`/`SE`.** `LLMS`/`LM`,
+persisted under `llm`, with the same by-host colour lookup and a `Custom...` option.
+Two differences from the search bar: the icon goes through `resolve()` rather than the
+DDG ip3 service, so it gets `apple-touch-icon` quality and shares `ic:https://<host>`
+with any matching tile; and an entry may carry `b` (a full background) for services
+whose brand is a pale neutral the 6% tint wash cannot express — Claude's bone is the
+only one, applied from JS so switching away clears it.
+
+**Only Claude's URL behaviour is verified.** `claude.ai/new?q=` prefills without sending
+(confirmed 2026-08-28). The other four are the widely used custom-search-engine patterns
+but were not tested here, and they differ in kind: Perplexity runs the query outright,
+ChatGPT and Grok are believed to submit, and Gemini is the doubtful one — it has no
+documented prefill parameter and may ignore `?q=` entirely, landing on an empty composer.
+Each is one string in `LLMS`; fix them as they are found wrong rather than assuming the
+mechanism is broken.
+
+## Setup wizard and profile saving
+
+**Feature flags live in `feat` (`{llm, wx, sol}`), and its absence is the first-run
+signal.** No separate "seen the wizard" key — one key means the two can never disagree.
+`applyFeat()` toggles `display` inline, so clearing the inline value hands the element
+back to its CSS rule (`#sol:empty{display:none}` keeps working). Dismissing a wizard step
+leaves that feature on: the default is the behaviour that existed before the wizard.
+
+**`weather()` returns early only when weather *and* the solar countdown are both off.**
+One fetch feeds both — sunrise/sunset arrive in the forecast call — so turning off the
+weather widget alone must not stop the countdown getting its data.
+
+**Save uses `chrome.downloads` with `saveAs:false`; Save as passes `saveAs:true`.** The
+old `<a download>` could not suppress Brave's "Ask where to save each file" setting, so
+plain Save opened a file browser. `chrome.downloads.download` overrides that per call,
+which is what the `downloads` permission is for. Save now prompts for a name only
+(defaulting to `profname`) and writes to the download directory; `.json` is appended if
+the user leaves it off, since the prompt asks for a profile name rather than a filename.
+
+**Widget toggles are a panel (`#wp`), not minus badges on the widgets themselves.**
+`#wx` and `#sol` are repainted by replacing their `innerHTML`, so any badge appended
+inside them is destroyed on the next weather or countdown tick; keeping badges alive
+would mean re-appending from inside both paint functions. A single edit-mode panel
+bottom-left avoids that entirely and stays readable. `#wp` is in the `closest()` list of
+the body handler so clicking it does not exit edit mode.
+
+**Save as passes no filename prompt.** `chrome.downloads.download` with `saveAs:true`
+opens the browser's own save dialog — the system file chooser, so Dolphin on KDE and the
+native equivalent elsewhere — which already collects the name and the directory. Asking
+for a name first would have meant two dialogs for one action. Plain Save keeps its
+in-page `ask()` dialog and never browses.
+
+**The edit pencil is drawn as inline SVG.** `&#9998;` (✎) renders as a detailed, hard to
+read mark at 38px button size, and varies by installed font. A two-path stroked SVG using
+`currentColor` reads clearly and matches the other controls.

@@ -11,8 +11,8 @@ See DECISIONS.md for why things are the way they are before changing them.
 
 ## Files
 - `manifest.json` — MV3. `chrome_url_overrides.newtab` → `newtab.html`.
-  Permissions: `favicon`; `host_permissions` for `https://*/*` and `http://*/*`
-  (icon fetching/caching, and LAN services served over plain HTTP).
+  Permissions: `favicon`, `downloads`; `host_permissions` for `https://*/*` and
+  `http://*/*` (icon fetching/caching, and LAN services served over plain HTTP).
   The description field carries the repo path.
 - `newtab.html` — all CSS inline in a `<style>` block, plus the inline SVG `#glass`
   filter used by the tile backdrop.
@@ -30,7 +30,10 @@ See DECISIONS.md for why things are the way they are before changing them.
 - `wxloc` — `{lat, lon, name}` weather location.
 - `wx` — cached forecast incl. sunrise/sunset, 30-minute TTL.
 - `engine` — selected search engine `{n, u, h}`.
-- `profname` — last "Save profile as" filename.
+- `llm` — selected chat model for the bottom bar `{n, u, h}`.
+- `profname` — last saved profile filename.
+- `feat` — `{llm, wx, sol}` 0/1 flags from the setup wizard. Its absence is what makes
+  the wizard run, so deleting the key re-runs it on the next new tab.
 
 ## Icon resolution order (newtab.js)
 1. custom `t.ic` if set
@@ -46,15 +49,25 @@ auto-trimmed and normalised to a 512px square by `autotrim()` before storage.
 ## UI
 - **+** add a tile; leave the URL blank to create a folder. Then choose Default or
   Custom icon.
-- **pencil** toggles edit mode: red minus badges delete, clicking a tile opens a menu
-  (rename / change URL / change icon). Clicking the background exits edit mode.
-- **hamburger**: Save profile, Save profile as, Export, Import, Set weather location,
-  Refresh weather, Clear icon cache.
+- **pencil** (inline SVG, not a glyph) toggles edit mode: red minus badges delete,
+  clicking a tile opens a menu (rename / change URL / change icon). Edit mode also shows
+  `#wp` bottom-left, a chip per widget (Weather, Sunrise/sunset, AI search bar) toggling
+  it on or off live. Clicking the background exits edit mode.
+- **hamburger**: Save profile (in-page name dialog, writes to the download directory),
+  Save profile as (opens the OS file browser, no name prompt), Export, Import, Create a
+  new profile, Set weather location, Refresh weather, Clear icon cache.
+- **setup wizard** runs on first load and from Create a new profile: search engine,
+  whether to include the AI assistant bar and which assistant, whether to show weather
+  and the solar countdown, then the location picker. Everything defaults to on if a step
+  is dismissed. Create a new profile confirms first, offers to save the current profile,
+  then clears tiles, `feat`, `wxloc`, `wx` and `profname`.
 - Drag a tile onto another to create a folder; drag onto a folder to add. Back arrow
   (top left) leaves a folder.
 - Clicking the search-bar icon switches search engine (built-in list or custom URL).
-- A second bar at the bottom sends the typed question to `claude.ai/new?q=`. It
-  prefills the composer; claude.ai requires one human click to send (see DECISIONS.md).
+- A second bar at the bottom sends the typed question to a chat model. Clicking its
+  icon switches model (Claude, ChatGPT, Gemini, Grok, Perplexity, or custom URL), the
+  same way the search-bar icon switches engine. Whether a given service prefills or
+  auto-runs the prompt is per-service — see DECISIONS.md.
 
 ## Conventions
 - Vanilla JS, no libraries, no bundler. Keep it small and fast.

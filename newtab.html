@@ -4,12 +4,12 @@ html,body{height:100%}
 body{margin:0;color:#fff;font:14px system-ui,sans-serif;
 background:center/cover no-repeat fixed #14161a}
 #g{display:grid;grid-template-columns:repeat(auto-fill,90px);gap:14px 14px;
-justify-content:start;align-content:start;padding:120px 25px 25px;max-width:calc(100vw - 260px)}
+justify-content:start;align-content:start;padding:120px 25px 25px 60px;max-width:calc(100vw - 260px)}
 .tile{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;
 text-decoration:none;color:#fff;cursor:pointer}
 .i{width:69px;height:69px;border-radius:18px;background:rgba(255,255,255,.16);
 backdrop-filter:blur(14px) saturate(140%);display:flex;align-items:center;justify-content:center;
-font-size:26px;font-weight:600;box-shadow:0 4px 16px #0007,0 0 0 1px #ffffff40 inset,0 0 0 1px #00000030;transition:transform .1s;overflow:hidden}
+font-size:26px;font-weight:600;box-shadow:0 2px 10px #0004,0 0 0 1px #ffffff40 inset,0 0 0 1px #00000030;transition:transform .1s;overflow:hidden}
 .tile:hover .i{transform:scale(1.08)}
 .i img{width:60px;height:60px;object-fit:contain;filter:drop-shadow(0 1px 3px #0007) drop-shadow(0 0 1px #0006)}
 .i.fold{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:8px;box-sizing:border-box;
@@ -37,7 +37,7 @@ display:flex;align-items:center;justify-content:center;white-space:nowrap}
 .solbox{display:inline-flex;flex:0 0 auto;width:max-content;min-width:max-content;align-items:center;gap:11px;white-space:nowrap;padding:8px 16px;border-radius:16px;
 background:rgba(255,255,255,.16);backdrop-filter:blur(18px) saturate(150%);
 -webkit-backdrop-filter:blur(18px) saturate(150%);
-box-shadow:0 1px 5px #00000026,0 0 0 1px #ffffff26 inset;
+box-shadow:0 1px 4px #00000018,0 0 0 1px #ffffff26 inset;
 text-shadow:0 1px 8px #000e,0 0 3px #000c}
 #sol .scol{display:flex;flex-direction:column;line-height:1.15}
 #sol .sl{font-size:17px;opacity:.95;white-space:nowrap;overflow:visible}
@@ -47,12 +47,12 @@ text-shadow:0 1px 8px #000e,0 0 3px #000c}
 #sb,#cb{--tint:#8b93a1;position:fixed;left:50%;transform:translateX(-50%);z-index:4;
 display:flex;align-items:center;gap:10px;width:min(560px,46vw);
 background:color-mix(in srgb,var(--tint) 6%,#ffffffee);border-radius:26px;padding:11px 18px;
-box-shadow:0 6px 24px #0006,0 0 0 1px color-mix(in srgb,var(--tint) 25%,transparent) inset;
+box-shadow:0 3px 14px #0004,0 0 0 1px color-mix(in srgb,var(--tint) 25%,transparent) inset;
 backdrop-filter:blur(8px)}
 #sb{top:26px}
-#cb{--tint:#9b8b74;background:#f6f4edee;bottom:48px}
+#cb{--tint:#9b8b74;bottom:48px}
 #sb #ddg,#cb #cim{width:22px;height:22px;flex:none;cursor:pointer}
-#cb #cim{border-radius:5px;cursor:default}
+#cb #cim{border-radius:5px}
 #sb input,#cb input{flex:1;border:0;outline:none;background:transparent;font:16px system-ui;color:#1b1f24;caret-color:var(--tint)}
 #sb input::placeholder,#cb input::placeholder{color:#8b93a1}
 #wx{position:fixed;top:168px;right:48px;display:flex;flex-direction:column;
@@ -76,8 +76,15 @@ background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12);color:#fff;
 border-radius:50%;cursor:pointer;font-size:18px;line-height:1;opacity:.7;
 backdrop-filter:blur(6px);transition:opacity .15s}
 #b button:hover,#back:hover{opacity:1}
-#b button#add{background:#1a86f0;border-color:#1a86f088;opacity:.9;font-size:26px;font-weight:700}
-#b button#ed{font-size:24px}
+#b button#add{background:#1a86f0;border-color:#1a86f088;opacity:.9}
+#wp{display:none;position:fixed;bottom:16px;left:16px;z-index:5;gap:8px;
+background:rgba(0,0,0,.42);border:1px solid #ffffff1f;border-radius:12px;padding:8px;
+backdrop-filter:blur(8px)}
+body.e #wp{display:flex}
+#wp div{padding:7px 12px;border-radius:8px;font-size:13px;cursor:pointer;
+background:#ffffff14;white-space:nowrap;user-select:none}
+#wp div:hover{background:#ffffff26}
+#wp div.on{background:#1a86f0cc}
 #mp{display:none;position:fixed;bottom:66px;right:16px;z-index:4;min-width:180px;
 background:#23262c;border-radius:10px;padding:6px;box-shadow:0 8px 24px #000a}
 #mp.open{display:block}
@@ -106,12 +113,14 @@ border:1px solid #ffffff2a;background:#1a1d22;color:#fff;font-size:14px;outline:
  <feGaussianBlur in="n" stdDeviation="1.2" result="ns"/>
  <feDisplacementMap in="SourceGraphic" in2="ns" scale="55" xChannelSelector="R" yChannelSelector="G"/>
 </filter></svg>
-<div id=b><button id=add title=add>+</button><button id=ed title=edit>&#9998;</button><button id=menu title=menu>&#9776;</button></div>
+<div id=wp><div data-w=wx></div><div data-w=sol></div><div data-w=llm></div></div>
+<div id=b><button id=add title=add><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button><button id=ed title=edit><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M14.5 6.5l3 3"/></svg></button><button id=menu title=menu><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>
 <div id=mp>
  <div data-a=save>Save profile</div>
  <div data-a=saveas>Save profile as…</div>
  <div data-a=export>Export profile</div>
  <div data-a=import>Import profile</div>
+ <div data-a=newprof>Create a new profile</div>
  <div data-a=setloc>Set weather location</div>
  <div data-a=clearwx>Refresh weather</div>
  <div data-a=clearic>Clear icon cache</div>
