@@ -11,11 +11,10 @@ No build step, no dependencies, no framework. Three files do the work.
 Not on any store yet — load it unpacked.
 
 1. Clone this repository.
-2. Add wallpapers (see **Wallpapers** below) — the page renders black without them.
-3. Open `chrome://extensions` (`brave://extensions` in Brave).
-4. Turn on **Developer mode**.
-5. Click **Load unpacked** and select the repository folder.
-6. Open a new tab. A setup wizard runs on first use.
+2. Open `chrome://extensions` (`brave://extensions` in Brave).
+3. Turn on **Developer mode**.
+4. Click **Load unpacked** and select the repository folder.
+5. Open a new tab. A setup wizard runs on first use.
 
 Works on Chromium-based browsers on Linux, macOS and Windows: Brave, Chrome,
 Edge, Vivaldi. Firefox and Safari are not supported — it uses `chrome_url_overrides`
@@ -26,8 +25,12 @@ and Chromium extension APIs.
 
 ## Wallpapers
 
-`bg/` ships empty. Drop any `.jpg` files in it — one is chosen at random per tab —
-then regenerate the manifest of filenames:
+`bg/` ships with 63 photographs from [Lorem Picsum](https://picsum.photos), served
+under the [Unsplash License](https://unsplash.com/license). Every one is credited to
+its photographer in [CREDITS.md](CREDITS.md).
+
+To use your own instead, replace the contents of `bg/` — one image is chosen at
+random per tab — and regenerate the list of filenames:
 
 ```sh
 ls bg | sed 's/.*/"&"/' | paste -sd, - | sed 's/^/const BG=[/; s/$/];/' > bglist.js
@@ -99,7 +102,8 @@ constraints that look arbitrary but are not. Read it before changing them.
 
 MIT — see [LICENSE](LICENSE).
 
-Wallpapers are not included and are not covered by that licence; whatever you put
-in `bg/` is yours to license. Product names and logos belong to their owners — no
+The MIT licence covers the code. The wallpapers in `bg/` are not ours and are not
+MIT — they are Unsplash-licensed photographs, credited individually in
+[CREDITS.md](CREDITS.md). Product names and logos belong to their owners; no
 third-party logo is bundled here, they are fetched from the sites themselves at
-runtime.
+runtime and cached locally.

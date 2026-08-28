@@ -297,3 +297,20 @@ profile `wxloc` is cleared, so `#wx` would be a bare "Set location" button and `
 empty — nothing to spotlight and nothing to judge the question by. `demoWx()` supplies
 plausible values with `ts:0`, which reads as stale so the real fetch still happens, and
 they are cleared the moment both questions are answered.
+
+## Publishing
+
+**The wallpapers are Unsplash-licensed and now individually credited.** They came from
+Lorem Picsum, whose filenames are the Picsum image ids, so provenance was recoverable
+after the fact: `https://picsum.photos/id/<id>/info` returns the photographer and the
+original Unsplash URL for each one. `CREDITS.md` is generated from that. Attribution is
+not required by the Unsplash License, but a redistributed collection that cannot name
+its photographers is not defensible, and stripped EXIF had left no other trail.
+
+`bg/86.jpg` was deleted: Picsum has retired that id and returns "Image does not exist",
+so it was the one file whose origin could not be established. Regenerate `bglist.js`
+after any such change or the page renders black.
+
+The licence excludes compiling Unsplash photos to replicate a competing service. A
+wallpaper set inside a home-screen extension is not that, but it is the clause to
+re-read before adding images in bulk.
