@@ -237,3 +237,55 @@ drops a real `.json` in it, best-effort and never blocking the save. Export rema
 way to get a file out on demand. The standing caveat is unchanged — extension storage is
 keyed to the extension ID, so loading the extension from a different directory loses the
 stored profiles, and Export is the mitigation.
+
+**A profile is the whole configuration, not just the tiles.** It carries `engine`, `llm`,
+`feat` and `wxloc` alongside `tiles`, because switching profiles that restored the grid
+but left the search engine, AI assistant, widget flags and weather location untouched was
+only half a switch — and the new-profile dialog had been promising "tiles and settings"
+that Save never actually preserved. Bumped to `v:2`; `v:1` files and bare arrays still
+load, with absent fields left as they are, so old exports keep working.
+
+Every writer goes through `snapshot()` and every reader through `applyProfile()` — the
+IndexedDB copy, the mirror file and Export cannot drift apart, and `dirty()` compares a
+fresh snapshot against the stored one so a settings change counts as unsaved work just as
+a moved tile does. The icon cache is deliberately excluded: it is large and rebuilds
+itself on demand.
+
+## Dialogs
+
+**No native `prompt()`/`alert()` anywhere in the flows the user sees.** Chromium prefixes
+them with "The extension iOS Home Screen New Tab says", which reads as a browser warning
+rather than part of the page, and they cannot be worded or styled. `ask()` and `dlg()`
+replace them. The + button now says what it is for — "Add a website shortcut to your home
+page" — in the dialog and in its `title`, because a bare `+` gave no clue.
+
+**`ask()` returns `null` for cancelled and `''` for deliberately blank.** The add-a-tile
+flow needs the difference: leaving the address blank is how a folder is made, so it
+cannot be conflated with dismissing the dialog. Existing callers reject both with a
+falsy test, so the change was safe.
+
+**`dlg(msg, btns, sel, spot)` cuts a lit hole in the scrim.** `spot` is an element id;
+the hole is a `position:fixed` div sized to that element's rect with
+`box-shadow: 0 0 0 3px accent, 0 0 0 9999px rgba(0,0,0,.56)` — the huge spread paints the
+scrim everywhere except the hole, so no mask or clip-path is needed and the dialog still
+centres normally. The wizard uses it to point at the thing each question is about. A
+zero-size rect falls back to the plain scrim.
+
+The rect is read inside `requestAnimationFrame`, not while the dialog is being built. The
+wizard's first question is created during initial script execution, before layout has
+settled, and measuring there put the hole in the wrong place — later questions were
+correct because several `await`s had passed by then. The same callback is bound to
+`resize`, and unbound when the dialog closes.
+
+`spot` is a CSS selector rather than an element id, because the countdown's id is the
+full-width strip `#sol`, not the pill: `#sol .solbox` is the thing worth lighting up.
+
+The dialog needs `position:relative;z-index:1` and the hole `z-index:0`, or the dialog
+renders *under* the scrim: a positioned element paints above a static one whatever the DOM
+order, and `.dlg` is static inside the flex overlay while `.hole` is `position:fixed`.
+
+**The widget questions paint demo readings when there is no forecast yet.** On a fresh
+profile `wxloc` is cleared, so `#wx` would be a bare "Set location" button and `#sol`
+empty — nothing to spotlight and nothing to judge the question by. `demoWx()` supplies
+plausible values with `ts:0`, which reads as stale so the real fetch still happens, and
+they are cleared the moment both questions are answered.

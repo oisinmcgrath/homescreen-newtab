@@ -85,6 +85,11 @@ body.e #wp{display:flex}
 background:#ffffff14;white-space:nowrap;user-select:none}
 #wp div:hover{background:#ffffff26}
 #wp div.on{background:#1a86f0cc}
+#tst{position:fixed;left:50%;bottom:110px;transform:translateX(-50%);z-index:20;
+background:#23262cf2;border:1px solid #ffffff1f;color:#fff;font-size:14px;
+padding:10px 18px;border-radius:20px;opacity:0;transition:opacity .25s;
+pointer-events:none}
+#tst.on{opacity:1}
 #mp{display:none;position:fixed;bottom:66px;right:16px;z-index:4;min-width:180px;
 background:#23262c;border-radius:10px;padding:6px;box-shadow:0 8px 24px #000a}
 #mp.open{display:block}
@@ -92,8 +97,11 @@ background:#23262c;border-radius:10px;padding:6px;box-shadow:0 8px 24px #000a}
 #mp div:hover{background:#ffffff18}
 .ov{position:fixed;inset:0;background:#0008;display:flex;align-items:center;
 justify-content:center;z-index:10}
+.ov.spot{background:transparent}
+.ov .hole{position:fixed;border-radius:26px;pointer-events:none;z-index:0;
+box-shadow:0 0 0 3px #cbc3f5aa,0 0 0 9999px #0009}
 .dlg{background:#23262c;padding:22px 24px;border-radius:14px;min-width:280px;
-box-shadow:0 8px 30px #000a}
+box-shadow:0 8px 30px #000a;position:relative;z-index:1}
 .dlg p{margin:0 0 18px;font-size:15px}
 .dlg .row{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
 .dlg button{padding:8px 18px;border-radius:20px;border:1px solid #6c5ce755;
@@ -126,8 +134,9 @@ border:1px solid #ffffff2a;background:#1a1d22;color:#fff;font-size:14px;outline:
  <feGaussianBlur in="n" stdDeviation="1.2" result="ns"/>
  <feDisplacementMap in="SourceGraphic" in2="ns" scale="55" xChannelSelector="R" yChannelSelector="G"/>
 </filter></svg>
+<div id=tst></div>
 <div id=wp><div data-w=wx></div><div data-w=sol></div><div data-w=llm></div></div>
-<div id=b><button id=add title=add><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button><button id=ed title=edit><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M14.5 6.5l3 3"/></svg></button><button id=menu title=menu><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>
+<div id=b><button id=add title="Add a website shortcut to your home page"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button><button id=ed title=edit><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M14.5 6.5l3 3"/></svg></button><button id=menu title=menu><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>
 <div id=mp>
  <div data-a=save>Save profile</div>
  <div data-a=select>Select profile</div>

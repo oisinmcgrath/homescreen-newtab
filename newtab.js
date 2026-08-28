@@ -26,6 +26,18 @@ async function pickDir(){
  catch(e){return null}}
 
 const PK='prof:';
+// a profile is the whole configuration, not just the grid. v1 files hold tiles only.
+const snapshot=()=>({v:2,tiles:T,engine:SE,llm:LM,feat:feat(),wxloc:WX});
+function applyProfile(d){
+ const t=Array.isArray(d)?d:d.tiles;
+ if(!Array.isArray(t))return false;
+ T=t;cur=null;save();
+ if(d.engine){SE=d.engine;localStorage.setItem('engine',JSON.stringify(SE));paintSE()}
+ if(d.llm){LM=d.llm;localStorage.setItem('llm',JSON.stringify(LM));paintLM()}
+ if(d.feat){localStorage.setItem('feat',JSON.stringify(d.feat));applyFeat();paintWp()}
+ if(d.wxloc){WX=d.wxloc;localStorage.setItem('wxloc',JSON.stringify(WX));
+  localStorage.removeItem('wx')}
+ draw();weather();solar();return true}
 const readProf=n=>idb(st=>st.get(PK+n));
 const delProf=n=>idb(st=>st.delete(PK+n));
 const listProfiles=()=>idb(st=>st.getAllKeys())
@@ -40,19 +52,38 @@ async function mirror(name){
   if(await h.queryPermission(o)!=='granted'&&await h.requestPermission(o)!=='granted')return;
   const fn=/\.json$/i.test(name)?name:name+'.json';
   const w=await(await h.getFileHandle(fn,{create:true})).createWritable();
-  await w.write(JSON.stringify({v:1,tiles:T},null,2));await w.close()}
+  await w.write(JSON.stringify(snapshot(),null,2));await w.close()}
  catch(e){}}
 
 async function writeProfile(name){
- try{await idb(st=>st.put({v:1,tiles:T},PK+name))}
+ try{await idb(st=>st.put(snapshot(),PK+name))}
  catch(e){await dlg('Could not save the profile.',['OK']);return false}
  mirror(name);return true}
 
+let tt=null;
+function toast(m){const e=$('tst');e.textContent=m;e.classList.add('on');
+ clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('on'),1600)}
+
+async function saveCurrent(rename){
+ let n=localStorage.getItem('profname');
+ if(rename||!n){
+  n=await ask('What would you like to call this profile?',
+   (n||'homescreen-profile').replace(/\.json$/i,''));
+  if(!n)return false}
+ if(!await writeProfile(n))return false;
+ localStorage.setItem('profname',n);toast('Saved to '+n);return true}
+
 async function loadProfile(n){
  const d=await readProf(n).catch(()=>null);
- const t=d&&(Array.isArray(d)?d:d.tiles);
- if(!Array.isArray(t)){await dlg('Could not read that profile.',['OK']);return}
- T=t;cur=null;save();draw();localStorage.setItem('profname',n)}
+ if(!d||!applyProfile(d)){await dlg('Could not read that profile.',['OK']);return}
+ localStorage.setItem('profname',n)}
+
+async function customUrl(msg,ph){
+ const u=await ask(msg,ph,'Use');
+ if(!u)return null;
+ let h;try{h=new URL(u).hostname.replace(/^www\./,'')}
+ catch(e){await dlg('That is not a valid web address.',['OK']);return null}
+ return {n:h,u,h}}
 
 function srow(t,sub,btn,fn){
  const w=document.createElement('div');w.className='srow';
@@ -80,6 +111,8 @@ async function settings(page){
    const ps=await listProfiles();
    pane.append(srow('Saved profiles',ps.length?ps.join(', '):'None yet','Select',
     ()=>{o.remove();pickProfile()}));
+   pane.append(srow('Save as\u2026','Store the current layout under a different name','Save as',
+    ()=>{o.remove();saveCurrent(1)}));
    pane.append(srow('Also save to a folder',h?h.name:'Off \u2014 profiles are stored in the browser','Change',
     async()=>{if(await pickDir())show('Profiles')}));
    pane.append(srow('Export profile','Write a copy anywhere \u2014 external drive, another machine','Export',
@@ -132,22 +165,37 @@ function ask(msg,val,ok){return new Promise(r=>{
   const done=v=>{o.remove();r(v)};
   o.onclick=e=>{if(e.target===o)done(null)};
   d.querySelector('#ac').onclick=()=>done(null);
-  d.querySelector('#ao').onclick=()=>done(i.value.trim()||null);
-  i.onkeydown=e=>{if(e.key==='Enter')done(i.value.trim()||null);
+  d.querySelector('#ao').onclick=()=>done(i.value.trim());
+  i.onkeydown=e=>{if(e.key==='Enter')done(i.value.trim());
    if(e.key==='Escape')done(null)};
   setTimeout(()=>{i.focus();i.select()},30)})}
 
-function dlg(msg,btns){return new Promise(r=>{
+function dlg(msg,btns,sel,spot){return new Promise(r=>{
   const o=document.createElement('div');o.className='ov';
-  o.onclick=e=>{if(e.target===o){o.remove();r(-1)}};
+  let hole=null,place=null;
+  if(spot){
+   hole=document.createElement('div');hole.className='hole';
+   // measured in a frame callback: the first wizard dialog is built during initial
+   // script execution, before layout has settled, and read a stale rect
+   place=()=>{const el=document.querySelector(spot);
+    const rc=el&&el.getBoundingClientRect();
+    if(!rc||!rc.width||!rc.height){o.classList.remove('spot');hole.remove();return}
+    o.classList.add('spot');const q=7;
+    hole.style.cssText='left:'+(rc.left-q)+'px;top:'+(rc.top-q)+'px;'+
+     'width:'+(rc.width+q*2)+'px;height:'+(rc.height+q*2)+'px'};
+   o.append(hole);addEventListener('resize',place)}
+  const done=v=>{if(place)removeEventListener('resize',place);o.remove();r(v)};
+  o.onclick=e=>{if(e.target===o)done(-1)};
   const d=document.createElement('div');d.className='dlg';
   const p=document.createElement('p');p.textContent=msg;
   const row=document.createElement('div');row.className='row';
+  const hi=sel===undefined?0:sel;
   btns.forEach((b,i)=>{const el=document.createElement('button');
-    el.textContent=b;if(i===0)el.className='p';
-    el.onclick=()=>{o.remove();r(i)};row.append(el)});
+    el.textContent=b;if(i===hi)el.className='p';
+    el.onclick=()=>done(i);row.append(el)});
   d.append(p,row);o.append(d);document.body.append(o);
-  row.firstChild.focus()})}
+  if(place)requestAnimationFrame(place);
+  (row.children[hi]||row.firstChild).focus()})}
 
 function autotrim(src){return new Promise(res=>{
  const im=new Image();
@@ -266,8 +314,9 @@ document.body.onclick=e=>{$('mp').classList.remove('open');
  if(edit&&!e.target.closest('.tile,#b,#wp,.dlg')){edit=0;draw()}};
 $('back').onclick=()=>{cur=null;draw()};
 $('add').onclick=async()=>{
-  const n=prompt('Name');if(!n)return;
-  let u=prompt('URL (leave blank to make a folder)');
+  const n=await ask('Add a website shortcut to your home page. What should it be called?','','Next');
+  if(!n)return;
+  let u=await ask('Web address for '+n+'. Leave it blank to make a folder instead.','','Add');
   if(u===null)return;
   if(!u){list().push({n,f:[]});save();draw();return}
   if(!/^https?:/.test(u))u='https://'+u;
@@ -281,7 +330,7 @@ const tick=()=>{const d=new Date();
   dt.textContent=d.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric',year:'numeric'})};
 tick();setInterval(tick,10000);
 
-function dl(name,ask){const blob=new Blob([JSON.stringify({v:1,tiles:T},null,2)],{type:'application/json'});
+function dl(name,ask){const blob=new Blob([JSON.stringify(snapshot(),null,2)],{type:'application/json'});
  const url=URL.createObjectURL(blob),fn=/\.json$/i.test(name)?name:name+'.json';
  const done=()=>setTimeout(()=>URL.revokeObjectURL(url),2000);
  if(chrome.downloads&&chrome.downloads.download){
@@ -289,19 +338,17 @@ function dl(name,ask){const blob=new Blob([JSON.stringify({v:1,tiles:T},null,2)]
  const a=document.createElement('a');a.href=url;a.download=fn;a.click();done()}
 
 function imp(){const f=document.createElement('input');f.type='file';f.accept='application/json,.json';
- f.onchange=()=>{const fr=new FileReader();fr.onload=()=>{try{
-   const d=JSON.parse(fr.result);const t=Array.isArray(d)?d:d.tiles;
-   if(!Array.isArray(t))throw 0;
-   T=t;cur=null;save();draw()}catch(e){alert('Not a valid profile file.')}};
+ f.onchange=()=>{const nm=f.files[0].name.replace(/\.json$/i,'');
+  const fr=new FileReader();fr.onload=()=>{try{
+   if(!applyProfile(JSON.parse(fr.result)))throw 0;
+   localStorage.setItem('profname',nm)}catch(e){alert('Not a valid profile file.')}};
   fr.readAsText(f.files[0])};f.click()}
 
 const stamp=()=>new Date().toISOString().slice(0,10);
 $('menu').onclick=e=>{e.stopPropagation();$('mp').classList.toggle('open')};
 $('mp').onclick=async e=>{e.stopPropagation();const k=e.target.dataset.a;if(!k)return;
  $('mp').classList.remove('open');
- if(k==='save'){const n=await ask('What would you like to call this profile?',
-   (localStorage.getItem('profname')||'homescreen-profile').replace(/\.json$/i,''));
-   if(n&&await writeProfile(n))localStorage.setItem('profname',n)}
+ if(k==='save')saveCurrent();
  if(k==='select')pickProfile();
  if(k==='newprof')newProfile();
  if(k==='settings')settings()};
@@ -409,16 +456,14 @@ function paintSE(){
  sb.style.setProperty('--tint',e?e.c:'#8b93a1')}
 paintSE();
 ddg.onclick=async e=>{e.preventDefault();e.stopPropagation();
- const names=ENGINES.map(x=>x.n).concat('Custom...');
- const k=await dlg('Search engine',names);
+ const k=await dlg('Search engine',ENGINES.map(x=>x.n).concat('Custom\u2026'),
+  ENGINES.findIndex(x=>x.h===SE.h));
  if(k<0)return;
- if(k===ENGINES.length){
-  const u=prompt('Search URL with query at the end','https://example.com/search?q=');
-  if(!u)return;
-  let h;try{h=new URL(u).hostname.replace(/^www\./,'')}catch(err){alert('Invalid URL');return}
-  SE={n:h,u,h}}
- else SE=ENGINES[k];
- localStorage.setItem('engine',JSON.stringify(SE));paintSE()};
+ const c=k===ENGINES.length?
+  await customUrl('Search address, with the query at the end','https://example.com/search?q='):
+  ENGINES[k];
+ if(!c)return;
+ SE=c;localStorage.setItem('engine',JSON.stringify(SE));paintSE()};
 sb.onsubmit=e=>{e.preventDefault();const v=sq.value.trim();
  if(v)location.href=SE.u+encodeURIComponent(v)};
 const LLMS=[
@@ -436,42 +481,65 @@ function paintLM(){
  cb.style.background=e&&e.b?e.b:''}
 paintLM();
 cim.onclick=async e=>{e.preventDefault();e.stopPropagation();
- const names=LLMS.map(x=>x.n).concat('Custom...');
- const k=await dlg('Ask which model',names);
+ const k=await dlg('Which AI assistant?',LLMS.map(x=>x.n).concat('Custom\u2026'),
+  LLMS.findIndex(x=>x.h===LM.h));
  if(k<0)return;
- if(k===LLMS.length){
-  const u=prompt('Chat URL with query at the end','https://example.com/?q=');
-  if(!u)return;
-  let h;try{h=new URL(u).hostname.replace(/^www\./,'')}catch(err){alert('Invalid URL');return}
-  LM={n:h,u,h}}
- else LM=LLMS[k];
- localStorage.setItem('llm',JSON.stringify(LM));paintLM()};
+ const c=k===LLMS.length?
+  await customUrl('Chat address, with the question at the end','https://example.com/?q='):
+  LLMS[k];
+ if(!c)return;
+ LM=c;localStorage.setItem('llm',JSON.stringify(LM));paintLM()};
 cb.onsubmit=e=>{e.preventDefault();const v=cq.value.trim();
  if(v)location.href=LM.u+encodeURIComponent(v)};
 
+// plausible readings so the widget questions have something to point at on a fresh profile
+function demoWx(){
+ const n=Date.now(),hr=o=>String(new Date(n+o*3600000).getHours()).padStart(2,'0')+':00';
+ return{sun:[['rise',new Date(n+3*3600000).toISOString()],
+   ['set',new Date(n+9*3600000).toISOString()]],
+  t:11,code:0,pp:0,hi:17,lo:8,ts:0,
+  f:[{hr:hr(3),t:11,code:0,p:0},{hr:hr(6),t:9,code:1,p:10},{hr:hr(9),t:9,code:2,p:20}]}}
+
 async function wizard(){
  const f={};
- let k=await dlg('Search engine',ENGINES.map(x=>x.n));
- if(k>=0){SE=ENGINES[k];localStorage.setItem('engine',JSON.stringify(SE));paintSE()}
- f.llm=await dlg('Include a search bar for your favourite AI assistant?',['Yes','No'])===1?0:1;
- if(f.llm){k=await dlg('Which AI assistant?',LLMS.map(x=>x.n));
-  if(k>=0){LM=LLMS[k];localStorage.setItem('llm',JSON.stringify(LM));paintLM()}}
- f.wx=await dlg('Would you like the weather widget on your home page?',['Yes','No'])===1?0:1;
- f.sol=await dlg('Would you like the countdown to sunset/sunrise on your home page?',['Yes','No'])===1?0:1;
+ let k=await dlg('Search engine',ENGINES.map(x=>x.n).concat('Custom\u2026'),0,'#sb');
+ if(k>=0){const c=k===ENGINES.length?
+   await customUrl('Search address, with the query at the end','https://example.com/search?q='):
+   ENGINES[k];
+  if(c){SE=c;localStorage.setItem('engine',JSON.stringify(SE));paintSE()}}
+ f.llm=await dlg('Include a search bar for your favourite AI assistant?',['Yes','No'],0,'#cb')===1?0:1;
+ if(f.llm){k=await dlg('Which AI assistant?',LLMS.map(x=>x.n).concat('Custom\u2026'),0,'#cb');
+  if(k>=0){const c=k===LLMS.length?
+    await customUrl('Chat address, with the question at the end','https://example.com/?q='):
+    LLMS[k];
+   if(c){LM=c;localStorage.setItem('llm',JSON.stringify(LM));paintLM()}}}
+ const real=localStorage.getItem('wx');
+ if(!real){const dm=demoWx();localStorage.setItem('wx',JSON.stringify(dm));paintWx(dm);solar()}
+ f.wx=await dlg('Would you like the weather widget on your home page?',['Yes','No'],0,'#wx')===1?0:1;
+ f.sol=await dlg('Would you like the countdown to sunset/sunrise on your home page?',['Yes','No'],0,'#sol .solbox')===1?0:1;
+ if(!real){localStorage.removeItem('wx');weather();solar()}
  localStorage.setItem('feat',JSON.stringify(f));applyFeat();
  if(f.wx||f.sol){if(!WX)setLoc();else weather()}}
 
+// unsaved work is the only reason to interrupt: compare against the stored copy
+async function dirty(){
+ const n=localStorage.getItem('profname');if(!n)return T.length>0;
+ const d=await readProf(n).catch(()=>null);
+ return !d||JSON.stringify(d)!==JSON.stringify(snapshot())}
+
 async function newProfile(){
- const k=await dlg('Start a new profile? The tiles and settings in use now will be replaced.',
-  ['Cancel','Save current first','Continue']);
- if(k<=0)return;
- if(k===1){const n=await ask('What would you like to call this profile?',
-   (localStorage.getItem('profname')||'homescreen-profile').replace(/\.json$/i,''));
-  if(!n||!await writeProfile(n))return;
-  localStorage.setItem('profname',n)}
+ const nm=await ask('What will you name your profile?','','Create');
+ if(!nm)return;
+ if(await dirty()){
+  const k=await dlg('The profile in use now has unsaved changes.',
+   ['Cancel','Save current first','Discard them']);
+  if(k<=0)return;
+  if(k===1&&!await saveCurrent())return}
  T=[];cur=null;edit=0;save();
- ['feat','wxloc','wx','profname'].forEach(x=>localStorage.removeItem(x));
- WX=null;draw();wizard()}
+ ['feat','wxloc','wx'].forEach(x=>localStorage.removeItem(x));
+ WX=null;localStorage.setItem('profname',nm);draw();
+ await wizard();
+ if(await writeProfile(nm))toast('Created '+nm)}
 
 applyFeat();paintWp();
 if(!localStorage.getItem('feat'))wizard();
