@@ -32,12 +32,11 @@ See DECISIONS.md for why things are the way they are before changing them.
 - `engine` — selected search engine `{n, u, h}`.
 - `llm` — selected chat model for the bottom bar `{n, u, h}`.
 - `profname` — last saved profile name, without the `.json`.
-- IndexedDB `hs` → store `kv`: key `dir` is the optional mirror-folder handle (handles
-  cannot be serialised into `localStorage`); keys `prof:<name>` are the saved profiles,
+- IndexedDB `hs` → store `kv`: keys `prof:<name>` are the saved profiles,
   `{v:2, tiles, engine, llm, feat, wxloc}` each — the whole configuration, not just the
   grid. `v:1` files (tiles only) and bare arrays still load; missing fields are left
-  alone. `snapshot()` and `applyProfile()` are the single writer and reader, so Save,
-  the mirror file and Export cannot drift apart. Profiles live here, not on disk — no folder to configure, and no
+  alone. `snapshot()` and `applyProfile()` are the single writer and reader, so Save and
+  Export cannot drift apart. Profiles live here, not on disk — no folder to configure, and no
   ~5 MB `localStorage` ceiling to hit once icons are embedded.
 - `feat` — `{llm, wx, sol}` 0/1 flags from the setup wizard. Its absence is what makes
   the wizard run, so deleting the key re-runs it on the next new tab.

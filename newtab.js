@@ -17,14 +17,6 @@ function idb(fn){return new Promise((res,rej)=>{const r=indexedDB.open('hs',1);
  r.onerror=()=>rej(r.error);
  r.onsuccess=()=>{const q=fn(r.result.transaction('kv','readwrite').objectStore('kv'));
   q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)}})}
-const getDir=()=>idb(st=>st.get('dir')).catch(()=>null);
-const setDir=h=>idb(st=>st.put(h,'dir'));
-
-async function pickDir(){
- if(!window.showDirectoryPicker){await dlg('This browser cannot pick a folder.',['OK']);return null}
- try{const h=await window.showDirectoryPicker({mode:'readwrite'});await setDir(h);return h}
- catch(e){return null}}
-
 const PK='prof:';
 // a profile is the whole configuration, not just the grid. v1 files hold tiles only.
 const snapshot=()=>({v:2,tiles:T,engine:SE,llm:LM,feat:feat(),wxloc:WX});
@@ -44,21 +36,10 @@ const listProfiles=()=>idb(st=>st.getAllKeys())
  .then(k=>k.filter(x=>typeof x==='string'&&x.startsWith(PK)).map(x=>x.slice(PK.length)).sort())
  .catch(()=>[]);
 
-// best effort: a configured folder gets a real .json alongside the stored copy
-async function mirror(name){
- const h=await getDir();if(!h)return;
- const o={mode:'readwrite'};
- try{
-  if(await h.queryPermission(o)!=='granted'&&await h.requestPermission(o)!=='granted')return;
-  const fn=/\.json$/i.test(name)?name:name+'.json';
-  const w=await(await h.getFileHandle(fn,{create:true})).createWritable();
-  await w.write(JSON.stringify(snapshot(),null,2));await w.close()}
- catch(e){}}
-
 async function writeProfile(name){
  try{await idb(st=>st.put(snapshot(),PK+name))}
  catch(e){await dlg('Could not save the profile.',['OK']);return false}
- mirror(name);return true}
+ return true}
 
 let tt=null;
 function toast(m){const e=$('tst');e.textContent=m;e.classList.add('on');
@@ -91,7 +72,8 @@ function srow(t,sub,btn,fn){
  const a=document.createElement('div');a.className='st';a.textContent=t;
  const b=document.createElement('div');b.className='ss';b.textContent=sub;
  c.append(a,b);
- const k=document.createElement('button');k.textContent=btn;k.onclick=fn;
+ const k=document.createElement('button');k.textContent=btn;
+ if(fn)k.onclick=fn;else k.disabled=true;
  w.append(c,k);return w}
 
 async function settings(page){
@@ -107,14 +89,11 @@ async function settings(page){
   [...tabs.children].forEach(b=>b.classList.toggle('on',b.textContent===n));
   pane.textContent='';
   if(n==='Profiles'){
-   const h=await getDir();
    const ps=await listProfiles();
    pane.append(srow('Saved profiles',ps.length?ps.join(', '):'None yet','Select',
     ()=>{o.remove();pickProfile()}));
    pane.append(srow('Save as\u2026','Store the current layout under a different name','Save as',
     ()=>{o.remove();saveCurrent(1)}));
-   pane.append(srow('Also save to a folder',h?h.name:'Off \u2014 profiles are stored in the browser','Change',
-    async()=>{if(await pickDir())show('Profiles')}));
    pane.append(srow('Export profile','Write a copy anywhere \u2014 external drive, another machine','Export',
     ()=>{o.remove();dl('homescreen-'+stamp()+'.json',1)}))}
   if(n==='Weather'){

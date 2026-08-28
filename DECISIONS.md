@@ -232,9 +232,17 @@ identically on every OS, lists instantly, and survives browser restarts without 
 permission re-grant. It is used rather than `localStorage` because a profile with icons
 embedded runs to ~800 KB and `localStorage` caps near 5 MB.
 
-The folder handle survives as an optional mirror: when one is set, `writeProfile()` also
-drops a real `.json` in it, best-effort and never blocking the save. Export remains the
-way to get a file out on demand. The standing caveat is unchanged — extension storage is
+**The mirror-to-a-folder feature was removed: Brave disables the File System Access API.**
+`brave://flags/#file-system-access-api` ships as *Default (Disabled)*, so
+`window.showDirectoryPicker` is undefined and no directory handle can ever be obtained.
+Requiring users to flip a browser flag is not a shippable dependency, and the flag is off
+for a reason — it grants every site the ability to ask for folder access.
+
+Note that this does *not* affect Export, which is often confused with it: Export uses
+`chrome.downloads.download({saveAs:true})`, the extension downloads API, which opens the
+native save dialog (Dolphin on KDE) for a single file. That is a one-shot hand-off and
+works fine. Only the persistent handle needed to write into a folder repeatedly without a
+dialog depends on the disabled API. Export remains the way to get a file out on demand. The standing caveat is unchanged — extension storage is
 keyed to the extension ID, so loading the extension from a different directory loses the
 stored profiles, and Export is the mitigation.
 
@@ -246,7 +254,7 @@ that Save never actually preserved. Bumped to `v:2`; `v:1` files and bare arrays
 load, with absent fields left as they are, so old exports keep working.
 
 Every writer goes through `snapshot()` and every reader through `applyProfile()` — the
-IndexedDB copy, the mirror file and Export cannot drift apart, and `dirty()` compares a
+IndexedDB copy and Export cannot drift apart, and `dirty()` compares a
 fresh snapshot against the stored one so a settings change counts as unsaved work just as
 a moved tile does. The icon cache is deliberately excluded: it is large and rebuilds
 itself on demand.
