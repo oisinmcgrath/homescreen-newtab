@@ -2,19 +2,17 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**A browser new tab page laid out like a phone home screen — an app grid you arrange yourself, with real site icons, weather, a sunrise countdown, and a bar that sends a question straight to an AI assistant.** No build step, no dependencies: three files and a folder of wallpapers.
+Home Screen replaces the new tab page in Chromium browsers with a grid of shortcuts you add yourself, over a wallpaper picked at random from a local folder. Around the grid are a clock, a weather block, a countdown to the next sunrise or sunset, and a battery readout. A search bar sits at the top and a bar for asking an AI assistant a question sits at the bottom.
+
+No build step and no dependencies: three files and a folder of wallpapers.
 
 <p align="center">
   <img src="media/home-screen.jpg" alt="The new tab page: a grid of app tiles with real site icons over a lake wallpaper, a search bar at the top, clock and weather at the right, a sunrise countdown at the left, and an Ask Claude bar along the bottom." width="820" />
 </p>
 
-## Why
-
-The default new tab page shows whatever you happened to visit most last week. It reorders itself without being asked, and there is no way to say *these nine things, in this order, permanently*. A phone home screen works the other way round: you place things, and they stay placed.
-
 ## The grid
 
-Tiles are added by hand. Nothing is ranked by visit count and nothing moves on its own. Drag one tile onto another to make a folder.
+Tiles are added by hand and stay in the order you put them in. Drag one tile onto another to make a folder.
 
 Icons come from a chain, tried in order:
 
@@ -32,7 +30,7 @@ Whatever it finds is cached as a data URL, so a site is looked up once. Uploaded
 
 ## Weather, sun and battery
 
-A weather block, a countdown to the next sunrise or sunset, and a battery readout sit around the grid. Each is optional: a setup wizard asks which you want on first run, and edit mode toggles them later. Turning one off stops the work as well as the display — with both weather and the countdown off, no forecast is fetched.
+Each of the three is optional. A setup wizard asks which you want on first run, and edit mode toggles them later. Turning one off stops the work as well as the display: with both weather and the countdown off, no forecast is fetched.
 
 Weather comes from [Open-Meteo](https://open-meteo.com): no key, no signup, cached for thirty minutes. The location is chosen by name from a search box rather than by asking the browser where you are, which behind a VPN answers wrongly.
 
@@ -40,7 +38,7 @@ Weather comes from [Open-Meteo](https://open-meteo.com): no key, no signup, cach
 
 The bar along the bottom takes a question and opens it in Claude, ChatGPT, Google AI Mode, Grok or Perplexity — or anything else you give a URL for.
 
-Your question is placed in the assistant's composer, and you press enter once more to send it. That second keystroke is not an oversight: sites show a warning when a prompt arrives from outside the chat box, and require the confirmation, because a link can otherwise submit text you never read.
+The question is placed in the assistant's composer and you press enter once more to send it. Sites show a warning when a prompt arrives from outside the chat box and require that confirmation, so the extension cannot submit on your behalf.
 
 <p align="center">
   <img src="media/wizard.jpg" alt="A setup wizard question reading 'Include a search bar for your favourite AI assistant?' with Yes and No buttons. The page behind is dimmed except for the Ask Claude bar along the bottom, lit through a hole in the overlay." width="820" />
