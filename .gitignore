@@ -1,0 +1,5 @@
+# Profiles are user data, not source. Saved profiles live in IndexedDB; these are
+# the copies Export and the optional mirror folder write out.
+homescreen-*.json
+*-profile.json
+profiles/

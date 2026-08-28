@@ -23,7 +23,7 @@ See DECISIONS.md for why things are the way they are before changing them.
 - `bg/*.jpg` — wallpapers, one picked at random per tab load.
 - `icon.svg`, `icon16/48/128.png` — extension + tab favicon (house outline).
 
-## Data model (localStorage)
+## Data model (localStorage, plus one IndexedDB entry)
 - `tiles` — `[{n, u, ic?}, ...]` or folders `{n, f:[...]}`. Name, URL, optional icon
   (data URL or remote URL).
 - `ic:<url>` — cached icon data URLs.
@@ -31,7 +31,11 @@ See DECISIONS.md for why things are the way they are before changing them.
 - `wx` — cached forecast incl. sunrise/sunset, 30-minute TTL.
 - `engine` — selected search engine `{n, u, h}`.
 - `llm` — selected chat model for the bottom bar `{n, u, h}`.
-- `profname` — last saved profile filename.
+- `profname` — last saved profile name, without the `.json`.
+- IndexedDB `hs` → store `kv`: key `dir` is the optional mirror-folder handle (handles
+  cannot be serialised into `localStorage`); keys `prof:<name>` are the saved profiles,
+  `{v, tiles}` each. Profiles live here, not on disk — no folder to configure, and no
+  ~5 MB `localStorage` ceiling to hit once icons are embedded.
 - `feat` — `{llm, wx, sol}` 0/1 flags from the setup wizard. Its absence is what makes
   the wizard run, so deleting the key re-runs it on the next new tab.
 
@@ -53,9 +57,14 @@ auto-trimmed and normalised to a 512px square by `autotrim()` before storage.
   clicking a tile opens a menu (rename / change URL / change icon). Edit mode also shows
   `#wp` bottom-left, a chip per widget (Weather, Sunrise/sunset, AI search bar) toggling
   it on or off live. Clicking the background exits edit mode.
-- **hamburger**: Save profile (in-page name dialog, writes to the download directory),
-  Save profile as (opens the OS file browser, no name prompt), Export, Import, Create a
-  new profile, Set weather location, Refresh weather, Clear icon cache.
+- **hamburger**: four entries only — Save profile (in-page name dialog, writes into the
+  profiles folder), Select profile (dropdown of the `.json` in that folder, plus a Browse
+  button for one kept anywhere else), Create a new profile, Settings.
+- **Settings** is a tabbed dialog holding everything configurable, so the menu stays
+  short: *Profiles* (profiles folder, export), *Weather* (location, refresh forecast),
+  *General* (clear icon cache). New options belong on a tab here, not in the menu.
+- Select profile lists the stored profiles in a dropdown, with Delete, and a Browse
+  button for loading a `.json` from anywhere.
 - **setup wizard** runs on first load and from Create a new profile: search engine,
   whether to include the AI assistant bar and which assistant, whether to show weather
   and the solar countdown, then the location picker. Everything defaults to on if a step

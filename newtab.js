@@ -12,6 +12,114 @@ function applyFeat(){const f=feat();
  wx.style.display=f.wx===0?'none':'';
  sol.style.display=f.sol===0?'none':''}
 
+function idb(fn){return new Promise((res,rej)=>{const r=indexedDB.open('hs',1);
+ r.onupgradeneeded=()=>r.result.createObjectStore('kv');
+ r.onerror=()=>rej(r.error);
+ r.onsuccess=()=>{const q=fn(r.result.transaction('kv','readwrite').objectStore('kv'));
+  q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)}})}
+const getDir=()=>idb(st=>st.get('dir')).catch(()=>null);
+const setDir=h=>idb(st=>st.put(h,'dir'));
+
+async function pickDir(){
+ if(!window.showDirectoryPicker){await dlg('This browser cannot pick a folder.',['OK']);return null}
+ try{const h=await window.showDirectoryPicker({mode:'readwrite'});await setDir(h);return h}
+ catch(e){return null}}
+
+const PK='prof:';
+const readProf=n=>idb(st=>st.get(PK+n));
+const delProf=n=>idb(st=>st.delete(PK+n));
+const listProfiles=()=>idb(st=>st.getAllKeys())
+ .then(k=>k.filter(x=>typeof x==='string'&&x.startsWith(PK)).map(x=>x.slice(PK.length)).sort())
+ .catch(()=>[]);
+
+// best effort: a configured folder gets a real .json alongside the stored copy
+async function mirror(name){
+ const h=await getDir();if(!h)return;
+ const o={mode:'readwrite'};
+ try{
+  if(await h.queryPermission(o)!=='granted'&&await h.requestPermission(o)!=='granted')return;
+  const fn=/\.json$/i.test(name)?name:name+'.json';
+  const w=await(await h.getFileHandle(fn,{create:true})).createWritable();
+  await w.write(JSON.stringify({v:1,tiles:T},null,2));await w.close()}
+ catch(e){}}
+
+async function writeProfile(name){
+ try{await idb(st=>st.put({v:1,tiles:T},PK+name))}
+ catch(e){await dlg('Could not save the profile.',['OK']);return false}
+ mirror(name);return true}
+
+async function loadProfile(n){
+ const d=await readProf(n).catch(()=>null);
+ const t=d&&(Array.isArray(d)?d:d.tiles);
+ if(!Array.isArray(t)){await dlg('Could not read that profile.',['OK']);return}
+ T=t;cur=null;save();draw();localStorage.setItem('profname',n)}
+
+function srow(t,sub,btn,fn){
+ const w=document.createElement('div');w.className='srow';
+ const c=document.createElement('div');
+ const a=document.createElement('div');a.className='st';a.textContent=t;
+ const b=document.createElement('div');b.className='ss';b.textContent=sub;
+ c.append(a,b);
+ const k=document.createElement('button');k.textContent=btn;k.onclick=fn;
+ w.append(c,k);return w}
+
+async function settings(page){
+ const o=document.createElement('div');o.className='ov';
+ const d=document.createElement('div');d.className='dlg set';
+ d.innerHTML='<div class=tabs></div><div class=spane></div>'+
+  '<div class=row><button id=sx class=p>Done</button></div>';
+ const tabs=d.querySelector('.tabs'),pane=d.querySelector('.spane');
+ o.append(d);document.body.append(o);
+ o.onclick=e=>{if(e.target===o)o.remove()};
+ d.querySelector('#sx').onclick=()=>o.remove();
+ const show=async n=>{
+  [...tabs.children].forEach(b=>b.classList.toggle('on',b.textContent===n));
+  pane.textContent='';
+  if(n==='Profiles'){
+   const h=await getDir();
+   const ps=await listProfiles();
+   pane.append(srow('Saved profiles',ps.length?ps.join(', '):'None yet','Select',
+    ()=>{o.remove();pickProfile()}));
+   pane.append(srow('Also save to a folder',h?h.name:'Off \u2014 profiles are stored in the browser','Change',
+    async()=>{if(await pickDir())show('Profiles')}));
+   pane.append(srow('Export profile','Write a copy anywhere \u2014 external drive, another machine','Export',
+    ()=>{o.remove();dl('homescreen-'+stamp()+'.json',1)}))}
+  if(n==='Weather'){
+   pane.append(srow('Location',WX?WX.name:'Not set yet','Change',
+    ()=>{o.remove();setLoc()}));
+   pane.append(srow('Forecast','Cached for 30 minutes','Refresh',
+    ()=>{localStorage.removeItem('wx');weather();solar()}))}
+  if(n==='General'){
+   pane.append(srow('Icon cache','Site icons stored after their first fetch','Clear',
+    ()=>{Object.keys(localStorage).filter(x=>x.startsWith('ic:')).forEach(x=>localStorage.removeItem(x));draw()}))}};
+ ['Profiles','Weather','General'].forEach(n=>{
+  const b=document.createElement('button');b.textContent=n;
+  b.onclick=()=>show(n);tabs.append(b)});
+ show(page||'Profiles')}
+
+async function pickProfile(){
+ const fs=await listProfiles();
+ const o=document.createElement('div');o.className='ov';
+ const d=document.createElement('div');d.className='dlg loc prof';
+ d.innerHTML='<p>Select profile</p><select id=ps></select>'+
+  '<div class=row><button id=pc>Cancel</button><button id=pdl>Delete</button>'+
+  '<button id=pb>Browse\u2026</button><button id=po class=p>Open</button></div>';
+ const sel=d.querySelector('#ps');
+ fs.forEach(f=>{const op=document.createElement('option');
+  op.value=f;op.textContent=f;sel.append(op)});
+ if(!fs.length){const op=document.createElement('option');
+  op.textContent='No saved profiles yet';op.value='';sel.append(op);
+  sel.disabled=d.querySelector('#po').disabled=d.querySelector('#pdl').disabled=true}
+ o.append(d);document.body.append(o);
+ o.onclick=e=>{if(e.target===o)o.remove()};
+ d.querySelector('#pc').onclick=()=>o.remove();
+ d.querySelector('#pb').onclick=()=>{o.remove();imp()};
+ d.querySelector('#po').onclick=()=>{const v=sel.value;o.remove();if(v)loadProfile(v)};
+ d.querySelector('#pdl').onclick=async()=>{const v=sel.value;if(!v)return;
+  if(await dlg('Delete the profile "'+v+'"?',['Cancel','Delete'])!==1)return;
+  await delProf(v).catch(()=>{});o.remove();pickProfile()};
+ setTimeout(()=>sel.focus(),30)}
+
 function ask(msg,val,ok){return new Promise(r=>{
   const o=document.createElement('div');o.className='ov';
   const d=document.createElement('div');d.className='dlg loc';
@@ -193,14 +301,10 @@ $('mp').onclick=async e=>{e.stopPropagation();const k=e.target.dataset.a;if(!k)r
  $('mp').classList.remove('open');
  if(k==='save'){const n=await ask('What would you like to call this profile?',
    (localStorage.getItem('profname')||'homescreen-profile').replace(/\.json$/i,''));
-   if(n){localStorage.setItem('profname',n);dl(n)}}
- if(k==='saveas')dl('homescreen-'+stamp()+'.json',1);
- if(k==='export')dl('homescreen-export-'+stamp()+'.json');
- if(k==='import')imp();
+   if(n&&await writeProfile(n))localStorage.setItem('profname',n)}
+ if(k==='select')pickProfile();
  if(k==='newprof')newProfile();
- if(k==='setloc')setLoc();
- if(k==='clearwx'){localStorage.removeItem('wx');weather()}
- if(k==='clearic'){Object.keys(localStorage).filter(x=>x.startsWith('ic:')).forEach(x=>localStorage.removeItem(x));draw()}};
+ if(k==='settings')settings()};
 
 let WX=JSON.parse(localStorage.getItem('wxloc')||'null');
 const SV={
@@ -320,7 +424,7 @@ sb.onsubmit=e=>{e.preventDefault();const v=sq.value.trim();
 const LLMS=[
  {n:'Claude',u:'https://claude.ai/new?q=',h:'claude.ai',c:'#9b8b74',b:'#f6f4edee'},
  {n:'ChatGPT',u:'https://chatgpt.com/?q=',h:'chatgpt.com',c:'#6e6e80'},
- {n:'Gemini',u:'https://gemini.google.com/app?q=',h:'gemini.google.com',c:'#8b7cf0'},
+ {n:'Google AI Mode',u:'https://www.google.com/search?udm=50&q=',h:'google.com',c:'#8b7cf0'},
  {n:'Grok',u:'https://grok.com/?q=',h:'grok.com',c:'#4a4a4a'},
  {n:'Perplexity',u:'https://www.perplexity.ai/search?q=',h:'perplexity.ai',c:'#20808d'}];
 let LM=JSON.parse(localStorage.getItem('llm')||'null')||LLMS[0];
@@ -363,8 +467,8 @@ async function newProfile(){
  if(k<=0)return;
  if(k===1){const n=await ask('What would you like to call this profile?',
    (localStorage.getItem('profname')||'homescreen-profile').replace(/\.json$/i,''));
-  if(!n)return;
-  localStorage.setItem('profname',n);dl(n)}
+  if(!n||!await writeProfile(n))return;
+  localStorage.setItem('profname',n)}
  T=[];cur=null;edit=0;save();
  ['feat','wxloc','wx','profname'].forEach(x=>localStorage.removeItem(x));
  WX=null;draw();wizard()}

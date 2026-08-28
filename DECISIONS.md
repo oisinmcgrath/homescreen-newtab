@@ -185,3 +185,55 @@ in-page `ask()` dialog and never browses.
 **The edit pencil is drawn as inline SVG.** `&#9998;` (✎) renders as a detailed, hard to
 read mark at 38px button size, and varies by installed font. A two-path stroked SVG using
 `currentColor` reads clearly and matches the other controls.
+
+## Profiles folder
+
+**Save writes through the File System Access API, not `chrome.downloads`.** An extension
+can only ever write inside the browser's download directory via `chrome.downloads` —
+absolute paths and `..` are rejected — so "save into the repo" is unreachable that way.
+`showDirectoryPicker()` gets a real directory handle; the user picks the folder once and
+every later Save writes into it silently. The handle is kept in IndexedDB (`hs`/`kv`/`dir`)
+because handles are structured-cloneable but not JSON-serialisable, so `localStorage`
+cannot hold one. Permission is re-checked on each use with `queryPermission` and
+re-requested if the browser dropped it between sessions — that prompt is a small
+permission bar, not a file browser.
+
+**Export is the only write-anywhere path, and Save as is gone.** The two did the same
+thing — `chrome.downloads` with `saveAs:true`, opening the OS file browser — so one of
+them was redundant. Export survived and now opens the browser (it used to write silently
+to the download directory); it remains the escape hatch for an external drive or another
+machine's share, which the directory handle deliberately does not cover.
+
+**Select profile is a `<select>`, and Import is a button inside it.** The folder listing
+is the fast path for the profiles the user actually keeps; loading one from anywhere else
+is the rare case, so it became a Browse button in that dialog instead of a menu entry of
+its own. A `dlg()` button row was the wrong shape here — it grows horizontally with the
+number of profiles, which a dropdown does not.
+
+**`gemini.google.com` has no URL prefill parameter** — confirmed 2026-08-28, it ignores
+`?q=` and lands on an empty composer. The `LLMS` entry now points at Google's AI Mode
+(`google.com/search?udm=50&q=`), which is Gemini-backed and does take a query. There is
+no URL-only way to prefill the Gemini web app; doing it would need a content script.
+
+**Configuration moved out of the hamburger menu into a tabbed Settings dialog.** The menu
+had grown to ten entries by mixing frequent actions with one-off configuration. It now
+holds only the four things done regularly — save, select, new, settings — and everything
+else lives on a Settings tab (Profiles, Weather, General). Anything new that is configured
+once belongs on a tab, not in the menu; that is the rule that keeps the menu short.
+Settings rows are built by `srow(title, subtitle, button, fn)` so a new row is one call.
+
+**Profiles are stored in IndexedDB (`prof:<name>`), not in a folder on disk.** There is no
+reliable per-OS default directory an extension can preset: a `FileSystemDirectoryHandle`
+can only come from the user picking a folder, and no API exposes `%APPDATA%`, `~/.config`
+or any XDG path. `chrome.downloads` does resolve the OS download directory without
+configuration, but it is write-only — an extension cannot list or read what it wrote —
+so Save would work and Select profile would not. IndexedDB needs no configuration, works
+identically on every OS, lists instantly, and survives browser restarts without a
+permission re-grant. It is used rather than `localStorage` because a profile with icons
+embedded runs to ~800 KB and `localStorage` caps near 5 MB.
+
+The folder handle survives as an optional mirror: when one is set, `writeProfile()` also
+drops a real `.json` in it, best-effort and never blocking the save. Export remains the
+way to get a file out on demand. The standing caveat is unchanged — extension storage is
+keyed to the extension ID, so loading the extension from a different directory loses the
+stored profiles, and Export is the mitigation.

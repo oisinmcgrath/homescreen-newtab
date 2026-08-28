@@ -95,14 +95,27 @@ justify-content:center;z-index:10}
 .dlg{background:#23262c;padding:22px 24px;border-radius:14px;min-width:280px;
 box-shadow:0 8px 30px #000a}
 .dlg p{margin:0 0 18px;font-size:15px}
-.dlg .row{display:flex;gap:10px;justify-content:flex-end}
+.dlg .row{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
 .dlg button{padding:8px 18px;border-radius:20px;border:1px solid #6c5ce755;
 background:transparent;color:#fff;font-size:14px;cursor:pointer}
 .dlg button.p{background:#cbc3f5;color:#111;border:0;font-weight:600}
 .dlg.loc{min-width:340px}
-.dlg.loc input{width:100%;box-sizing:border-box;padding:9px 11px;border-radius:8px;
+.dlg.set,.dlg.prof{min-width:430px}
+.dlg .tabs{display:flex;gap:6px;margin-bottom:14px}
+.dlg .tabs button{padding:7px 14px;border-radius:8px;border:0;
+background:#ffffff12;color:#fff;font-size:14px;cursor:pointer}
+.dlg .tabs button.on{background:#cbc3f5;color:#111;font-weight:600}
+.srow{display:flex;align-items:center;justify-content:space-between;gap:18px;
+padding:12px 0;border-top:1px solid #ffffff14}
+.srow:first-child{border-top:0}
+.srow .st{font-size:14px}
+.srow .ss{font-size:12.5px;opacity:.6;margin-top:3px}
+.srow button{flex:none}
+.spane{margin-bottom:14px}
+.dlg.loc select{margin-bottom:14px}
+.dlg.loc input,.dlg.loc select{width:100%;box-sizing:border-box;padding:9px 11px;border-radius:8px;
 border:1px solid #ffffff2a;background:#1a1d22;color:#fff;font-size:14px;outline:none}
-.dlg.loc input:focus{border-color:#cbc3f5}
+.dlg.loc input:focus,.dlg.loc select:focus{border-color:#cbc3f5}
 .lres{margin:10px 0 4px;max-height:230px;overflow:auto;font-size:14px;color:#cfd4dc}
 .lit{padding:8px 10px;border-radius:7px;cursor:pointer}
 .lit:hover{background:#ffffff14}
@@ -117,13 +130,9 @@ border:1px solid #ffffff2a;background:#1a1d22;color:#fff;font-size:14px;outline:
 <div id=b><button id=add title=add><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button><button id=ed title=edit><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M14.5 6.5l3 3"/></svg></button><button id=menu title=menu><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>
 <div id=mp>
  <div data-a=save>Save profile</div>
- <div data-a=saveas>Save profile as…</div>
- <div data-a=export>Export profile</div>
- <div data-a=import>Import profile</div>
+ <div data-a=select>Select profile</div>
  <div data-a=newprof>Create a new profile</div>
- <div data-a=setloc>Set weather location</div>
- <div data-a=clearwx>Refresh weather</div>
- <div data-a=clearic>Clear icon cache</div>
+ <div data-a=settings>Settings</div>
 </div>
 <button id=back title=back>&#8592;</button>
 <div id=clk></div>
