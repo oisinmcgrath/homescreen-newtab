@@ -241,8 +241,9 @@ function icon(d,t){
 
 async function menu(t,L,i){
   const c=await dlg(t.n,t.f?['Close','Rename']:['Close','Rename','Change URL','Change icon']);
-  if(c===1){const n=prompt('Name',t.n);if(n)t.n=n}
-  if(c===2){const u=prompt('URL',t.u);if(u){localStorage.removeItem('ic:'+t.u);t.u=u}}
+  if(c===1){const n=await ask('Name for this shortcut',t.n,'Rename');if(n)t.n=n}
+  if(c===2){const u=await ask('Web address for '+t.n,t.u,'Change');
+   if(u){localStorage.removeItem('ic:'+t.u);t.u=u}}
   if(c===3){const k=await dlg('Icon for '+t.n,['Default','Custom']);
     if(k===1){pick(t);return}
     if(k===0){t.ic=undefined;localStorage.removeItem('ic:'+t.u)}}
@@ -271,8 +272,8 @@ function draw(){
     const src=L[di];
     if(t.f&&!src.f){t.f.push(src);L.splice(di,1)}
     else if(!t.f&&!src.f){const nf={n:'Folder',f:[t,src]};
-      L.splice(i,1,nf);L.splice(di>i?di:di,1)}
-    else L.splice(i,0,L.splice(di,1)[0]);
+      L.splice(i,1,nf);L.splice(di,1)}
+    else L.splice(di<i?i-1:i,0,L.splice(di,1)[0]);
     di=null;save();draw()};
   a.onclick=e=>{
     if(edit){e.preventDefault();e.stopPropagation();menu(t,L,i);return}
@@ -309,18 +310,18 @@ const tick=()=>{const d=new Date();
   dt.textContent=d.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric',year:'numeric'})};
 tick();setInterval(tick,10000);
 
-function dl(name,ask){const blob=new Blob([JSON.stringify(snapshot(),null,2)],{type:'application/json'});
- const url=URL.createObjectURL(blob),fn=/\.json$/i.test(name)?name:name+'.json';
- const done=()=>setTimeout(()=>URL.revokeObjectURL(url),2000);
- if(chrome.downloads&&chrome.downloads.download){
-  chrome.downloads.download({url,filename:fn,saveAs:!!ask},done);return}
- const a=document.createElement('a');a.href=url;a.download=fn;a.click();done()}
+function dl(name,browse){
+ const blob=new Blob([JSON.stringify(snapshot(),null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob);
+ chrome.downloads.download({url,filename:name,saveAs:!!browse},
+  ()=>setTimeout(()=>URL.revokeObjectURL(url),2000))}
 
 function imp(){const f=document.createElement('input');f.type='file';f.accept='application/json,.json';
  f.onchange=()=>{const nm=f.files[0].name.replace(/\.json$/i,'');
   const fr=new FileReader();fr.onload=()=>{try{
    if(!applyProfile(JSON.parse(fr.result)))throw 0;
-   localStorage.setItem('profname',nm)}catch(e){alert('Not a valid profile file.')}};
+   localStorage.setItem('profname',nm)}
+   catch(e){dlg('That is not a valid profile file.',['OK'])}};
   fr.readAsText(f.files[0])};f.click()}
 
 const stamp=()=>new Date().toISOString().slice(0,10);
