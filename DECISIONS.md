@@ -103,3 +103,33 @@ Stale entries render as a black page — this was the cause of the intermittent
   from the extension; right-click it and hide.
 - Trademarked marks (e.g. the DuckDuckGo duck) are not drawn as SVG; the live favicon
   is used instead.
+
+## Claude bar
+
+**A second search bar at the bottom posts to `https://claude.ai/new?q=`.** Same
+`min(560px,46vw)` centred geometry as the DDG bar (the `#sb` rule now covers both as
+`#sb,#cb`; only `top`/`bottom` differ), baseline-aligned with the button row at
+`bottom:16px`. The icon reuses `resolve()` with `u:'https://claude.ai'` so it shares the
+`ic:https://claude.ai` cache entry with the Claude tile instead of creating a second one.
+
+**`?q=` prefills the composer but does not submit — this is deliberate, not a bug.**
+claude.ai shows a red "Use caution before running this prompt" interstitial for any
+prompt arriving from outside the chat box and requires a human click on send, because an
+external caller (a link, an extension) could otherwise get Claude to execute text the
+user never reviewed. Verified 2026-08-28. Do not go looking for a different query
+parameter that auto-sends; there isn't one, and the one-click confirmation is the point.
+Pressing Enter a second time on the loaded page completes the send.
+
+**Bar tints are brand colours applied through a `--tint` custom property** — a 6%
+`color-mix` wash into the white pill, a 25% inset hairline, and the caret. The top bar's
+tint follows the *selected engine* (the icon and placeholder already do), so it is looked
+up in `ENGINES` by host at paint time rather than stored on `SE` — a colour persisted in
+`localStorage` would mean existing saved engines render untinted until reselected.
+Custom engines fall back to neutral `#8b93a1`; DDG is `#e2913f`, pulled toward amber
+because true DDG `#de5833` read too red.
+
+**The Claude bar overrides `background` outright rather than mixing its tint in.** It uses
+a softened form of Claude's UI bone (`#f6f4ed`, between `#f0eee6` and white) instead of
+the logo clay `#d97757`, and a pale beige is invisible at a 6% wash on white — so the mix is bypassed
+and `--tint` stays a warm taupe `#9b8b74` purely to keep the inset hairline and the caret
+visible against the cream. Anything paler than that taupe makes the caret vanish.

@@ -53,6 +53,8 @@ auto-trimmed and normalised to a 512px square by `autotrim()` before storage.
 - Drag a tile onto another to create a folder; drag onto a folder to add. Back arrow
   (top left) leaves a folder.
 - Clicking the search-bar icon switches search engine (built-in list or custom URL).
+- A second bar at the bottom sends the typed question to `claude.ai/new?q=`. It
+  prefills the composer; claude.ai requires one human click to send (see DECISIONS.md).
 
 ## Conventions
 - Vanilla JS, no libraries, no bundler. Keep it small and fast.

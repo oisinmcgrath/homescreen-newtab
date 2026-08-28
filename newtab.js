@@ -252,16 +252,18 @@ async function weather(){
  catch(e){}}
 weather();setInterval(weather,1800000);
 const ENGINES=[
- {n:'DuckDuckGo',u:'https://duckduckgo.com/?q=',h:'duckduckgo.com'},
- {n:'Google',u:'https://www.google.com/search?q=',h:'google.com'},
- {n:'Brave',u:'https://search.brave.com/search?q=',h:'search.brave.com'},
- {n:'Bing',u:'https://www.bing.com/search?q=',h:'bing.com'},
- {n:'Startpage',u:'https://www.startpage.com/sp/search?query=',h:'startpage.com'},
- {n:'Wikipedia',u:'https://en.wikipedia.org/w/index.php?search=',h:'wikipedia.org'}];
+ {n:'DuckDuckGo',u:'https://duckduckgo.com/?q=',h:'duckduckgo.com',c:'#e2913f'},
+ {n:'Google',u:'https://www.google.com/search?q=',h:'google.com',c:'#4285f4'},
+ {n:'Brave',u:'https://search.brave.com/search?q=',h:'search.brave.com',c:'#fb542b'},
+ {n:'Bing',u:'https://www.bing.com/search?q=',h:'bing.com',c:'#008373'},
+ {n:'Startpage',u:'https://www.startpage.com/sp/search?query=',h:'startpage.com',c:'#5c4bc4'},
+ {n:'Wikipedia',u:'https://en.wikipedia.org/w/index.php?search=',h:'wikipedia.org',c:'#3366cc'}];
 let SE=JSON.parse(localStorage.getItem('engine')||'null')||ENGINES[0];
 function paintSE(){
  ddg.src='https://icons.duckduckgo.com/ip3/'+SE.h+'.ico';
- ddg.title=SE.n;sq.placeholder='Search '+SE.n}
+ ddg.title=SE.n;sq.placeholder='Search '+SE.n;
+ const e=ENGINES.find(x=>x.h===SE.h);
+ sb.style.setProperty('--tint',e?e.c:'#8b93a1')}
 paintSE();
 ddg.onclick=async e=>{e.preventDefault();e.stopPropagation();
  const names=ENGINES.map(x=>x.n).concat('Custom...');
@@ -276,6 +278,9 @@ ddg.onclick=async e=>{e.preventDefault();e.stopPropagation();
  localStorage.setItem('engine',JSON.stringify(SE));paintSE()};
 sb.onsubmit=e=>{e.preventDefault();const v=sq.value.trim();
  if(v)location.href=SE.u+encodeURIComponent(v)};
+resolve({u:'https://claude.ai'}).then(s=>cim.src=s);
+cb.onsubmit=e=>{e.preventDefault();const v=cq.value.trim();
+ if(v)location.href='https://claude.ai/new?q='+encodeURIComponent(v)};
 
 const SUNSVG={
  rise:'<defs><linearGradient id="gr" x1="0" y1="0" x2="0" y2="1">'+

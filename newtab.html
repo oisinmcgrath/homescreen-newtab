@@ -44,13 +44,17 @@ text-shadow:0 1px 8px #000e,0 0 3px #000c}
 #sol .sc{font-size:14px;opacity:.82;white-space:nowrap}
 #bat{display:flex;align-items:center;gap:8px;filter:drop-shadow(0 1px 3px #000c) drop-shadow(0 0 1px #000a)}
 #bat .bl{font-size:13px;opacity:.88}
-#sb{position:fixed;top:26px;left:50%;transform:translateX(-50%);z-index:4;
+#sb,#cb{--tint:#8b93a1;position:fixed;left:50%;transform:translateX(-50%);z-index:4;
 display:flex;align-items:center;gap:10px;width:min(560px,46vw);
-background:#ffffffee;border-radius:26px;padding:11px 18px;
-box-shadow:0 6px 24px #0006;backdrop-filter:blur(8px)}
-#sb #ddg{width:22px;height:22px;flex:none;cursor:pointer}
-#sb input{flex:1;border:0;outline:none;background:transparent;font:16px system-ui;color:#1b1f24}
-#sb input::placeholder{color:#8b93a1}
+background:color-mix(in srgb,var(--tint) 6%,#ffffffee);border-radius:26px;padding:11px 18px;
+box-shadow:0 6px 24px #0006,0 0 0 1px color-mix(in srgb,var(--tint) 25%,transparent) inset;
+backdrop-filter:blur(8px)}
+#sb{top:26px}
+#cb{--tint:#9b8b74;background:#f6f4edee;bottom:48px}
+#sb #ddg,#cb #cim{width:22px;height:22px;flex:none;cursor:pointer}
+#cb #cim{border-radius:5px;cursor:default}
+#sb input,#cb input{flex:1;border:0;outline:none;background:transparent;font:16px system-ui;color:#1b1f24;caret-color:var(--tint)}
+#sb input::placeholder,#cb input::placeholder{color:#8b93a1}
 #wx{position:fixed;top:168px;right:48px;display:flex;flex-direction:column;
 align-items:flex-end;gap:6px;font-weight:500;text-shadow:0 1px 8px #000e,0 0 3px #000c,0 0 1px #000b}
 #wx .wnow{display:flex;align-items:center;gap:8px}
@@ -120,6 +124,9 @@ border:1px solid #ffffff2a;background:#1a1d22;color:#fff;font-size:14px;outline:
 <form id=sb autocomplete=off>
 <img id=ddg alt="">
 <input id=sq placeholder="Search DuckDuckGo"></form>
+<form id=cb autocomplete=off>
+<img id=cim alt="">
+<input id=cq placeholder="Ask Claude"></form>
 <div id=wx></div>
 <div id=g></div>
 <script src="bglist.js"></script>
