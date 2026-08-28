@@ -31,12 +31,13 @@ text-shadow:0 1px 8px #000e,0 0 3px #000c}
 #sol{position:fixed;top:26px;left:0;width:calc(50% - min(280px,23vw));z-index:4;overflow:visible;
 display:flex;align-items:center;justify-content:center;white-space:nowrap}
 #sol:empty{display:none}
+#sol{font-weight:500;text-shadow:0 1px 8px #000e,0 0 3px #000c,0 0 1px #000b}
 #sol>*{position:relative}
 
 .solbox{display:inline-flex;flex:0 0 auto;width:max-content;min-width:max-content;align-items:center;gap:11px;white-space:nowrap;padding:8px 16px;border-radius:16px;
 background:rgba(255,255,255,.16);backdrop-filter:blur(18px) saturate(150%);
 -webkit-backdrop-filter:blur(18px) saturate(150%);
-box-shadow:0 4px 16px #0007,0 0 0 1px #ffffff40 inset,0 0 0 1px #00000030;
+box-shadow:0 1px 5px #00000026,0 0 0 1px #ffffff26 inset;
 text-shadow:0 1px 8px #000e,0 0 3px #000c}
 #sol .scol{display:flex;flex-direction:column;line-height:1.15}
 #sol .sl{font-size:17px;opacity:.95;white-space:nowrap;overflow:visible}
@@ -51,17 +52,17 @@ box-shadow:0 6px 24px #0006;backdrop-filter:blur(8px)}
 #sb input{flex:1;border:0;outline:none;background:transparent;font:16px system-ui;color:#1b1f24}
 #sb input::placeholder{color:#8b93a1}
 #wx{position:fixed;top:168px;right:48px;display:flex;flex-direction:column;
-align-items:flex-end;gap:6px;text-shadow:0 1px 8px #000e,0 0 3px #000c,0 0 1px #000b}
+align-items:flex-end;gap:6px;font-weight:500;text-shadow:0 1px 8px #000e,0 0 3px #000c,0 0 1px #000b}
 #wx .wnow{display:flex;align-items:center;gap:8px}
 #wx .wcol{display:flex;flex-direction:column;align-items:flex-start;line-height:1.05}
 #wx .wt{font-size:32px;font-weight:300}
-#wx .wd{font-size:14px;opacity:.92}
-#wx .wr{font-size:13px;opacity:.82}
+#wx .wd{font-size:15px;opacity:1;font-weight:500}
+#wx .wr{font-size:14px;opacity:1;font-weight:500}
 #wx .wf{display:flex;gap:14px;margin-top:2px}
 #wx .wfi{display:flex;flex-direction:column;align-items:center;gap:1px}
-#wx .wh{font-size:11px;opacity:.75}
-#wx .wtm{font-size:13px}
-#wx .wpp{font-size:11px;opacity:.75;color:#9ecbff}
+#wx .wh{font-size:13px;opacity:.95;font-weight:500}
+#wx .wtm{font-size:15px;font-weight:600}
+#wx .wpp{font-size:13px;opacity:1;font-weight:500;color:#bcdcff;display:flex;align-items:center;gap:3px}
 #wx .wset{font-size:14px;opacity:.85;cursor:pointer;border:1px solid #ffffff40;
 padding:7px 12px;border-radius:9px;backdrop-filter:blur(6px);background:#0000004d}
 #b{position:fixed;bottom:16px;right:16px;display:flex;gap:10px;z-index:3}

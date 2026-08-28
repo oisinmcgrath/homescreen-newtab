@@ -189,7 +189,9 @@ function paintWx(d){
   '<div class=wf>'+d.f.map(h=>
    '<div class=wfi><span class=wh>'+h.hr+'</span>'+svg(h.code,26)+
    '<span class=wtm>'+Math.round(h.t)+'\u00B0</span>'+
-   '<span class=wpp>'+h.p+'%</span></div>').join('')+'</div>'}
+   '<span class=wpp><svg viewBox="0 0 12 14" width="9" height="11" aria-hidden="true">'+
+   '<path d="M6 1C6 1 1.5 6.2 1.5 8.9A4.5 4.5 0 0 0 10.5 8.9C10.5 6.2 6 1 6 1z" fill="#bcdcff"/>'+
+   '</svg>'+h.p+'%</span></div>').join('')+'</div>'}
 
 function setLoc(){
  const o=document.createElement('div');o.className='ov';
