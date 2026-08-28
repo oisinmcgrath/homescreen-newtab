@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "iOS Home Screen New Tab",
+  "version": "1.0",
+  "description": "App-grid new tab page with clock and rotating wallpapers.",
+  "icons": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" },
+  "permissions": ["favicon"],
+  "host_permissions": ["https://*/*"],
+  "chrome_url_overrides": { "newtab": "newtab.html" }
+}
