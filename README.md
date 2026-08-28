@@ -87,13 +87,13 @@ Because both are cached, neither lookup repeats. Clear the icon cache under **Se
 
 ### Permissions
 
-| Permission | Why |
-|---|---|
-| `favicon` | Read the browser's own favicon cache — the last resort for a tile icon |
-| `downloads` | Write an exported profile without prompting for a folder |
-| `https://*/*`, `http://*/*` | Fetch icons from any site you add, including LAN services on plain HTTP |
+| Permission | When | Why |
+|---|---|---|
+| `favicon` | At install | Read the browser's own favicon cache — the last resort for a tile icon |
+| `downloads` | At install | Write an exported profile without prompting for a folder |
+| `https://*/*`, `http://*/*` | Optional, on request | Fetch icons from any site you add, including LAN services on plain HTTP |
 
-The host permissions are broad because a tile can point anywhere. They are used only to fetch icons.
+Host access is optional and not granted at install. The setup wizard offers it, and **Settings → General** can grant it later. Without it the extension never touches the network for icons and tiles fall back to the browser's favicon cache or a letter. It is broad when granted because a tile can point anywhere, and it is used only to fetch icons.
 
 ## Wallpapers
 

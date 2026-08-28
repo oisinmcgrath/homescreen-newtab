@@ -102,6 +102,11 @@ async function settings(page){
    pane.append(srow('Forecast','Cached for 30 minutes','Refresh',
     ()=>{localStorage.removeItem('wx');weather();solar()}))}
   if(n==='General'){
+   pane.append(srow('Site icons',
+    hostOK?'Allowed \u2014 icons are fetched from the sites you add'
+     :'Not allowed \u2014 tiles fall back to a letter',
+    hostOK?'Allowed':'Allow',
+    hostOK?null:()=>grantHosts(v=>{if(v){show('General');draw()}})));
    pane.append(srow('Icon cache','Site icons stored after their first fetch','Clear',
     ()=>{Object.keys(localStorage).filter(x=>x.startsWith('ic:')).forEach(x=>localStorage.removeItem(x));draw()}))}};
  ['Profiles','Weather','General'].forEach(n=>{
@@ -213,13 +218,20 @@ function pick(item){const f=document.createElement('input');f.type='file';f.acce
 
 const toData=b=>new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(b)});
 
+const HOSTS={origins:['https://*/*','http://*/*']};
+let hostOK=false;
+chrome.permissions.contains(HOSTS,v=>{hostOK=v});
+// must be called directly from a click: an await beforehand loses the user gesture
+const grantHosts=cb=>chrome.permissions.request(HOSTS,v=>{hostOK=v;if(cb)cb(v)});
+
 async function resolve(t){
   const ck='ic:'+t.u;
   if(t.ic)return t.ic;
   const c=localStorage.getItem(ck);if(c)return c;
   const o=new URL(t.u),h=o.hostname;
-  const cand=[o.origin+'/apple-touch-icon.png',o.origin+'/favicon.ico'];
-  if(!isIP(h))cand.push('https://icons.duckduckgo.com/ip3/'+h.replace(/^www\./,'')+'.ico');
+  const cand=[];
+  if(hostOK){cand.push(o.origin+'/apple-touch-icon.png',o.origin+'/favicon.ico');
+   if(!isIP(h))cand.push('https://icons.duckduckgo.com/ip3/'+h.replace(/^www\./,'')+'.ico')}
   for(const u of cand){try{
     const r=await fetch(u);if(!r.ok)continue;
     const b=await r.blob();if(!b.type.startsWith('image')||b.size<100)continue;
@@ -515,6 +527,8 @@ async function wizard(){
  f.wx=await dlg('Would you like the weather widget on your home page?',['Yes','No'],0,'#wx')===1?0:1;
  f.sol=await dlg('Would you like the countdown to sunset/sunrise on your home page?',['Yes','No'],0,'#sol .solbox')===1?0:1;
  if(!real){localStorage.removeItem('wx');weather();solar()}
+ if(!hostOK&&await dlg('Fetch icons from the sites you add? Without this, tiles show a letter instead.',
+  ['Allow','Not now'])===0)grantHosts(()=>draw());
  localStorage.setItem('feat',JSON.stringify(f));applyFeat();
  if(f.wx||f.sol){if(!WX)setLoc();else weather()}}
 

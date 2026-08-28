@@ -349,3 +349,23 @@ action for people who are not dragging. Emptying a folder deletes it, which is w
 happens on a phone, and avoids leaving an empty folder that can only be removed by hand.
 `menu()` now matches its options by label rather than index, so adding an option that only
 appears inside a folder cannot silently shift what the other indices mean.
+
+## Store readiness
+
+**"iOS" is out of the extension's name.** It is an Apple trademark and would likely have
+been rejected by the Chrome Web Store; it also disagreed with the README, the site and
+the repository, all of which said Home Screen. The manifest now reads
+`Home Screen New Tab`.
+
+**Host access moved to `optional_host_permissions`.** `https://*/*` plus `http://*/*` is
+effectively `<all_urls>`, the single thing most likely to slow or sink a store review, and
+granting it at install for something the user may never trigger is more than the extension
+needs. It is now requested from the setup wizard and from Settings → General, and
+`resolve()` checks `hostOK` before reaching for its two network sources, so a refusal
+degrades to the browser favicon cache and then a letter rather than firing requests that
+must fail.
+
+`chrome.permissions.request()` only works when called directly from a click — an `await`
+before it ends the user gesture and the prompt silently never appears. That is why the
+grant lives on a real button in Settings, and why the wizard calls it in the continuation
+of a dialog button rather than after further awaits.

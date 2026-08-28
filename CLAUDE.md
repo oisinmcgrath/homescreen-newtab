@@ -11,8 +11,11 @@ See DECISIONS.md for why things are the way they are before changing them.
 
 ## Files
 - `manifest.json` — MV3. `chrome_url_overrides.newtab` → `newtab.html`.
-  Permissions: `favicon`, `downloads`; `host_permissions` for `https://*/*` and
-  `http://*/*` (icon fetching/caching, and LAN services served over plain HTTP).
+  Permissions: `favicon`, `downloads`. Host access is `optional_host_permissions`
+  (`https://*/*`, `http://*/*`), not granted at install: it is requested from the setup
+  wizard and from Settings → General, and `resolve()` skips its two network sources
+  when `hostOK` is false. `chrome.permissions.request` must be called straight out of a
+  click — an `await` before it loses the user gesture and the prompt never appears.
   The description field carries the repo path.
 - `newtab.html` — all CSS inline in a `<style>` block, plus the inline SVG `#glass`
   filter used by the tile backdrop.
