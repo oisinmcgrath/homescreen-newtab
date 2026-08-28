@@ -5,7 +5,7 @@
 **A browser new tab page laid out like a phone home screen — an app grid you arrange yourself, with real site icons, weather, a sunrise countdown, and a bar that sends a question straight to an AI assistant.** No build step, no dependencies, no framework: three files and a folder of wallpapers.
 
 <p align="center">
-  <img src="icon128.png" alt="Home Screen logo" width="120" />
+  <img src="media/home-screen.jpg" alt="The new tab page: a grid of app tiles with real site icons over a lake wallpaper, a search bar at the top, clock and weather at the right, a sunrise countdown at the left, and an Ask Claude bar along the bottom." width="820" />
 </p>
 
 ## Why
@@ -28,6 +28,12 @@ Icons are the part that usually goes wrong — most new tab replacements give yo
 
 Whatever it finds is cached locally as a data URL, so each site is looked up once and never again. Uploaded icons are trimmed automatically: transparent margins are scanned away with a noise floor, then the artwork is scaled into a square. That noise floor exists because several downloaded logos turned out to carry faint opaque speckles across the whole canvas, which defeats an ordinary trim.
 
+<p align="center">
+  <img src="media/edit-mode.jpg" alt="The page in edit mode: every tile carries a red minus badge, and a panel bottom-left shows three chips - Weather, Sunrise/sunset and AI search bar - each ticked." width="820" />
+</p>
+
+Edit mode puts a minus badge on every tile, opens rename and icon options on click, and shows a panel bottom-left for switching each widget on or off.
+
 ### Weather, sun and battery — optional
 
 A weather block, a countdown to the next sunrise or sunset, and a battery readout sit around the grid. A setup wizard asks which you want the first time you open a tab, and each can be toggled later from edit mode. Turning one off removes it rather than hiding it — the forecast is not fetched at all if nothing needs it.
@@ -37,6 +43,12 @@ Weather comes from [Open-Meteo](https://open-meteo.com): no key, no signup, cach
 ### A second bar for asking a question
 
 The bar along the bottom takes a question and opens it in Claude, ChatGPT, Google AI Mode, Grok or Perplexity — or anything else you give a URL for. Click its icon to change where it goes, the same way the search bar works.
+
+<p align="center">
+  <img src="media/wizard.jpg" alt="A setup wizard question reading 'Include a search bar for your favourite AI assistant?' with Yes and No buttons. The page behind is dimmed except for the Ask Claude bar along the bottom, lit through a hole in the overlay." width="820" />
+</p>
+
+The setup wizard dims the page and cuts a hole over whatever it is asking about, so a question about a widget points at the widget.
 
 One deliberate limitation, because it looks like a bug: your question is placed in the assistant's composer and you press enter once more to send it. Anthropic's site shows a warning when a prompt arrives from outside the chat box and requires that confirmation, because a link can otherwise put words in your mouth and have an assistant act on them. Defeating that guard would save one keystroke and cost a real protection, so this leaves it alone.
 
