@@ -439,3 +439,22 @@ is a smaller error than showing "100%, charging" to someone at 20% on battery.
 
 Battery also joined the `feat` toggles, so it can be switched off from edit mode like the
 other widgets, whatever the browser does.
+
+**Fahrenheit follows the chosen location, not the browser.** `setLoc()` stores the
+geocoder's `country_code` on `wxloc`, and `weather()` appends
+`&temperature_unit=fahrenheit` when it is `US`. Open-Meteo converts server-side, so the
+daily range and the hourly strip all come back in the same unit and nothing needs
+converting here. Locale was the obvious alternative and is wrong: someone in London with
+a US-English browser wants Celsius, and someone in Ohio with an en-GB browser does not.
+The location is the thing actually being asked about.
+
+**The battery is a wizard question rather than a silent default,** and the question says
+Brave blocks the API. It cannot work there, and a widget that silently never appears is
+worse than one the user knowingly declined.
+
+**The browser's own footer cannot be removed by the extension.** Chromium and Brave draw a
+bar with a "Customise" button around an overridden new tab page. It is browser UI, not
+part of the document — the page cannot see it, style it or hide it, and the right-click
+Hide option writes a browser preference that no extension API can set. Since it cannot be
+fixed, the wizard's last step tells the user how to hide it themselves, and the README
+says the same. Do not go looking for a CSS or DOM solution; there isn't one.

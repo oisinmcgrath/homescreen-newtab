@@ -60,6 +60,8 @@ Works on Chromium browsers on Linux, macOS and Windows — Brave, Chrome, Edge, 
 
 > Loading the extension from a different folder changes its ID and clears its storage. Export your profile before moving it.
 
+Your browser draws its own bar along the bottom of an overridden new tab page, with a "Customise" button. It is browser UI rather than part of the page, so the extension cannot remove it — right-click it and choose **Hide** once, and it stays hidden.
+
 To see it populated straight away, import [`demo.json`](demo.json) from **Select profile → Browse**.
 
 ## Controls

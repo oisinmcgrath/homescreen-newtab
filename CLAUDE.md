@@ -35,7 +35,9 @@ See DECISIONS.md for why things are the way they are before changing them.
 - `tiles` — `[{n, u, ic?}, ...]` or folders `{n, f:[...]}`. Name, URL, optional icon
   (data URL or remote URL).
 - `ic:<url>` — cached icon data URLs.
-- `wxloc` — `{lat, lon, name}` weather location.
+- `wxloc` — `{lat, lon, name, cc}` weather location; `cc` is the ISO country code from
+  the geocoder and selects the unit — `US` asks Open-Meteo for Fahrenheit, everything
+  else gets Celsius. A `wxloc` saved before this has no `cc` and stays Celsius.
 - `wx` — cached forecast incl. sunrise/sunset, 30-minute TTL.
 - `engine` — selected search engine `{n, u, h}`.
 - `llm` — selected chat model for the bottom bar `{n, u, h}`.
@@ -76,8 +78,8 @@ auto-trimmed and normalised to a 512px square by `autotrim()` before storage.
 - Select profile lists the stored profiles in a dropdown, with Delete, and a Browse
   button for loading a `.json` from anywhere.
 - **setup wizard** runs on first load and from Create a new profile: search engine,
-  whether to include the AI assistant bar and which assistant, whether to show weather
-  and the solar countdown, then the location picker. Everything defaults to on if a step
+  whether to include the AI assistant bar and which assistant, whether to show weather,
+  the solar countdown and the battery, then the location picker. Everything defaults to on if a step
   is dismissed. Create a new profile confirms first, offers to save the current profile,
   then clears tiles, `feat`, `wxloc`, `wx` and `profname`.
 - Dragging a tile onto the **middle** of another creates a folder (or adds to one, if the

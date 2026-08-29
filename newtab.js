@@ -440,7 +440,7 @@ function setLoc(){
     const it=document.createElement('div');it.className='lit';
     it.textContent=[g.name,g.admin1,g.country].filter(Boolean).join(', ');
     it.onclick=()=>{
-     WX={lat:g.latitude,lon:g.longitude,name:g.name};
+     WX={lat:g.latitude,lon:g.longitude,name:g.name,cc:g.country_code};
      localStorage.setItem('wxloc',JSON.stringify(WX));
      localStorage.removeItem('wx');o.remove();weather()};
     res.append(it)})}
@@ -457,6 +457,7 @@ async function weather(){
  if(c&&c.f&&Date.now()-c.ts<1800000){paintWx(c);return}
  try{
   const u='https://api.open-meteo.com/v1/forecast?latitude='+WX.lat+'&longitude='+WX.lon+
+   (WX.cc==='US'?'&temperature_unit=fahrenheit':'')+
    '&current=temperature_2m,weather_code,precipitation_probability'+
    '&hourly=temperature_2m,weather_code,precipitation_probability'+
    '&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&timezone=auto&forecast_days=2';
@@ -554,8 +555,13 @@ async function wizard(){
  f.wx=await dlg('Would you like the weather widget on your home page?',['Yes','No'],0,'#wx')===1?0:1;
  f.sol=await dlg('Would you like the countdown to sunset/sunrise on your home page?',['Yes','No'],0,'#sol .solbox')===1?0:1;
  if(!real){localStorage.removeItem('wx');weather();solar()}
+ f.bat=await dlg('Show the battery level? Brave blocks the battery API, so it will stay hidden there.',
+  ['Yes','No'],0,'#bat')===1?0:1;
  if(!hostOK&&await dlg('Fetch icons from the sites you add? Without this, tiles show a letter instead.',
   ['Allow','Not now'])===0)grantHosts(()=>draw());
+ // the browser draws this itself, outside our document; we can only say so
+ await dlg('Last thing: your browser adds its own bar at the bottom of this page. '+
+  'Right-click it and choose Hide to remove it \u2014 an extension cannot do that for you.',['OK']);
  localStorage.setItem('feat',JSON.stringify(f));applyFeat();
  if(f.wx||f.sol){if(!WX)setLoc();else weather()}}
 
