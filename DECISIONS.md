@@ -425,9 +425,11 @@ the 69px icon rather than the whole tile, so it does not run down beside the lab
 **The battery readout hides itself rather than reporting a spoofed value.** Brave
 restricts the Battery Status API as a fingerprinting vector and returns the constants the
 spec defines for "no battery information available": `level 1`, `charging true`,
-`chargingTime 0`, `dischargingTime Infinity`. Confirmed 29 August 2026 on a laptop running
-unplugged, which is what makes it a lie rather than a coincidence — the widget was
-reporting a full, charging battery to someone on battery power.
+`chargingTime 0`, `dischargingTime Infinity`. Confirmed 29 August 2026 by running the same page in
+both browsers on the same machine at the same moment: Brave returned
+`level 1 / charging true / dischargingTime Infinity`, while Chromium returned
+`level 0.79 / charging false / dischargingTime 15498`. The hardware was at 79% on battery
+with four hours left, and Brave was reporting it full and charging.
 
 Nothing in an extension can recover the real figure; no other API exposes it. So `batt()`
 matches that exact four-value signature and renders nothing. The cost is that a genuinely
