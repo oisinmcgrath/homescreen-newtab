@@ -46,7 +46,7 @@ See DECISIONS.md for why things are the way they are before changing them.
   alone. `snapshot()` and `applyProfile()` are the single writer and reader, so Save and
   Export cannot drift apart. Profiles live here, not on disk — no folder to configure, and no
   ~5 MB `localStorage` ceiling to hit once icons are embedded.
-- `feat` — `{llm, wx, sol}` 0/1 flags from the setup wizard. Its absence is what makes
+- `feat` — `{llm, wx, sol, bat}` 0/1 flags from the setup wizard and the edit-mode panel. Its absence is what makes
   the wizard run, so deleting the key re-runs it on the next new tab.
 
 ## Icon resolution order (newtab.js)
@@ -65,8 +65,8 @@ auto-trimmed and normalised to a 512px square by `autotrim()` before storage.
   Custom icon.
 - **pencil** (inline SVG, not a glyph) toggles edit mode: red minus badges delete,
   clicking a tile opens a menu (rename / change URL / change icon). Edit mode also shows
-  `#wp` bottom-left, a chip per widget (Weather, Sunrise/sunset, AI search bar) toggling
-  it on or off live. Clicking the background exits edit mode.
+  `#wp` bottom-left, a chip per widget (Weather, Sunrise/sunset, AI search bar, Battery)
+  toggling it on or off live. Clicking the background exits edit mode.
 - **hamburger**: four entries only — Save profile (in-page name dialog, writes into the
   profiles folder), Select profile (dropdown of the `.json` in that folder, plus a Browse
   button for one kept anywhere else), Create a new profile, Settings.
@@ -122,4 +122,8 @@ Clear icon cache from the hamburger menu, or:
   once an extension overrides the new tab.
 - Loading the extension from a different directory changes its ID and resets
   `localStorage`. Export the profile first.
-- The Battery Status API is throttled on Linux; charging state is polled every 20s.
+- Brave restricts the Battery Status API and returns the spec's "no information"
+  constants — level 1, charging true, chargingTime 0, dischargingTime Infinity. `batt()`
+  treats that exact signature as "no battery" and renders nothing, because displaying it
+  reads as a confident 100% on a laptop running on battery. Elsewhere the API works and
+  charging state is polled every 20s.

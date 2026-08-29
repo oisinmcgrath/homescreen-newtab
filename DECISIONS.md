@@ -421,3 +421,19 @@ here previously.
 A blue bar in the grid gap or a ring on the icon shows which of the three will happen
 before the user commits, because the zones are otherwise invisible. The bar is sized to
 the 69px icon rather than the whole tile, so it does not run down beside the label.
+
+**The battery readout hides itself rather than reporting a spoofed value.** Brave
+restricts the Battery Status API as a fingerprinting vector and returns the constants the
+spec defines for "no battery information available": `level 1`, `charging true`,
+`chargingTime 0`, `dischargingTime Infinity`. Confirmed 29 August 2026 on a laptop running
+unplugged, which is what makes it a lie rather than a coincidence — the widget was
+reporting a full, charging battery to someone on battery power.
+
+Nothing in an extension can recover the real figure; no other API exposes it. So `batt()`
+matches that exact four-value signature and renders nothing. The cost is that a genuinely
+full, plugged-in machine in Chrome also matches and also shows nothing — the API gives no
+way to tell the two apart. Showing nothing in a case where the answer is "100%, charging"
+is a smaller error than showing "100%, charging" to someone at 20% on battery.
+
+Battery also joined the `feat` toggles, so it can be switched off from edit mode like the
+other widgets, whatever the browser does.

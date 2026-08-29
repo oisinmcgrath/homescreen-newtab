@@ -9,6 +9,7 @@ const isIP=h=>/^\d+\.\d+\.\d+\.\d+$/.test(h)||h==='localhost';
 const feat=()=>JSON.parse(localStorage.getItem('feat')||'{}');
 function applyFeat(){const f=feat();
  cb.style.display=f.llm===0?'none':'';
+ bat.style.display=f.bat===0?'none':'';
  wx.style.display=f.wx===0?'none':'';
  sol.style.display=f.sol===0?'none':''}
 
@@ -330,7 +331,7 @@ function draw(){
   const M=list();M.push(M.splice(di,1)[0]);
   di=null;save();draw()}}
 
-const WNAME={wx:'Weather',sol:'Sunrise/sunset',llm:'AI search bar'};
+const WNAME={wx:'Weather',sol:'Sunrise/sunset',llm:'AI search bar',bat:'Battery'};
 function paintWp(){const f=feat();
  $('wp').querySelectorAll('div').forEach(d=>{const k=d.dataset.w,on=f[k]!==0;
   d.textContent=(on?'\u2713 ':'+ ')+WNAME[k];d.classList.toggle('on',on)})}
@@ -338,7 +339,8 @@ $('wp').onclick=e=>{e.stopPropagation();const k=e.target.dataset.w;if(!k)return;
  const f=feat();f[k]=f[k]===0?1:0;
  localStorage.setItem('feat',JSON.stringify(f));
  applyFeat();paintWp();
- if(k==='wx'||k==='sol'){weather();solar()}};
+ if(k==='wx'||k==='sol'){weather();solar()}
+ if(k==='bat')batt()};
 
 document.body.onclick=e=>{$('mp').classList.remove('open');
  if(edit&&!e.target.closest('.tile,#b,#wp,.dlg')){edit=0;draw()}};
@@ -609,9 +611,15 @@ function solar(){
   '<span class=sc>in '+(hh?hh+'h ':'')+mm+'m</span></div></div>'}
 solar();setInterval(solar,60000);
 
+// Brave restricts the Battery Status API and returns the spec's "no information"
+// constants: full, charging, nothing left to discharge. Rendering that is a lie on a
+// laptop running on battery, so treat the signature as "no battery" and show nothing.
+const spoofed=b=>b.level===1&&b.charging===true&&b.chargingTime===0&&b.dischargingTime===Infinity;
+
 async function batt(){
- if(!navigator.getBattery){bat.innerHTML='';return}
+ if(!navigator.getBattery||feat().bat===0){bat.innerHTML='';return}
  try{const b=await navigator.getBattery();
+  if(spoofed(b)){bat.innerHTML='';return}
   const paint=()=>{const p=Math.round(b.level*100);
    const fill=p>20?'#7ddc8a':'#ff6b5a';
    bat.innerHTML='<svg viewBox="0 0 40 20" width="34" height="17">'+
