@@ -7,6 +7,9 @@ const list=()=>cur===null?T:T[cur].f;
 const isIP=h=>/^\d+\.\d+\.\d+\.\d+$/.test(h)||h==='localhost';
 
 const feat=()=>JSON.parse(localStorage.getItem('feat')||'{}');
+// no API exposes the browser's profile name, but our storage is already per-profile,
+// so a label written here identifies this profile by construction
+const paintLabel=()=>{plab.textContent=localStorage.getItem('plabel')||''};
 function applyFeat(){const f=feat();
  cb.style.display=f.llm===0?'none':'';
  bat.style.display=f.bat===0?'none':'';
@@ -108,6 +111,14 @@ async function settings(page){
      :'Not allowed \u2014 tiles fall back to a letter',
     hostOK?'Allowed':'Allow',
     hostOK?null:()=>grantHosts(v=>{if(v){show('General');draw()}})));
+   pane.append(srow('Profile label',
+    localStorage.getItem('plabel')||'Off \u2014 nothing shown',
+    'Change',async()=>{
+     const v=await ask('Label for this browser profile, shown bottom-left. Leave blank for none.',
+      localStorage.getItem('plabel')||'','Set');
+     if(v===null)return;
+     v?localStorage.setItem('plabel',v):localStorage.removeItem('plabel');
+     paintLabel();show('General')}));
    pane.append(srow('Icon cache','Site icons stored after their first fetch','Clear',
     ()=>{Object.keys(localStorage).filter(x=>x.startsWith('ic:')).forEach(x=>localStorage.removeItem(x));draw()}))}};
  ['Profiles','Weather','General'].forEach(n=>{
@@ -588,7 +599,7 @@ async function newProfile(){
  await wizard();
  if(await writeProfile(nm))toast('Created '+nm)}
 
-applyFeat();paintWp();
+applyFeat();paintWp();paintLabel();
 if(!localStorage.getItem('feat'))wizard();
 
 const SUNSVG={

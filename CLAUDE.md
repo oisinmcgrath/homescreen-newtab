@@ -42,6 +42,10 @@ See DECISIONS.md for why things are the way they are before changing them.
 - `engine` — selected search engine `{n, u, h}`.
 - `llm` — selected chat model for the bottom bar `{n, u, h}`.
 - `profname` — last saved profile name, without the `.json`.
+- `plabel` — optional label drawn bottom-left, set under Settings → General. No API
+  exposes the *browser* profile's name, but `localStorage` is already per-browser-
+  profile, so a label set in each one identifies it. Hidden in edit mode, where `#wp`
+  occupies that corner.
 - IndexedDB `hs` → store `kv`: keys `prof:<name>` are the saved profiles,
   `{v:2, tiles, engine, llm, feat, wxloc}` each — the whole configuration, not just the
   grid. `v:1` files (tiles only) and bare arrays still load; missing fields are left
