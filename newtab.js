@@ -242,6 +242,7 @@ const grantHosts=cb=>chrome.permissions.request(HOSTS,v=>{hostOK=v;if(cb)cb(v)})
 async function resolve(t){
   const ck='ic:'+t.u;
   if(t.ic)return t.ic;
+  if(/^(chrome|brave|edge|about|vivaldi|opera):/i.test(t.u))return '';
   const c=localStorage.getItem(ck);if(c)return c;
   const o=new URL(t.u),h=o.hostname;
   const cand=[];
@@ -335,7 +336,11 @@ function draw(){
     di=null;save();draw()};
   a.onclick=e=>{
     if(edit){e.preventDefault();e.stopPropagation();menu(t,L,i);return}
-    if(t.f){e.preventDefault();cur=T.indexOf(t);draw()}};
+    if(t.f){e.preventDefault();cur=T.indexOf(t);draw();return}
+    // a page cannot navigate to brave://, chrome:// and friends, but the
+    // extension can open one in a tab
+    if(t.u&&/^(chrome|brave|edge|about|vivaldi|opera):/i.test(t.u)){
+      e.preventDefault();chrome.tabs.create({url:t.u})}};
   g.append(a)});
  // empty space past the last tile: move it to the end. Tile drops stop
  // propagation, so this only ever fires on the bare grid.
