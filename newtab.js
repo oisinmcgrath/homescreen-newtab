@@ -139,6 +139,7 @@ async function pickProfile(){
  setTimeout(()=>sel.focus(),30)}
 
 function ask(msg,val,ok){return new Promise(r=>{
+  const t0=Date.now(),ready=()=>Date.now()-t0>350;
   const o=document.createElement('div');o.className='ov';
   const d=document.createElement('div');d.className='dlg loc';
   d.innerHTML='<p></p><input id=aq autocomplete=off>'+
@@ -148,14 +149,16 @@ function ask(msg,val,ok){return new Promise(r=>{
   const i=d.querySelector('#aq');i.value=val||'';
   o.append(d);document.body.append(o);
   const done=v=>{o.remove();r(v)};
-  o.onclick=e=>{if(e.target===o)done(null)};
-  d.querySelector('#ac').onclick=()=>done(null);
-  d.querySelector('#ao').onclick=()=>done(i.value.trim());
-  i.onkeydown=e=>{if(e.key==='Enter')done(i.value.trim());
-   if(e.key==='Escape')done(null)};
+  o.onclick=e=>{if(e.target===o&&ready())done(null)};
+  d.querySelector('#ac').onclick=()=>{if(ready())done(null)};
+  d.querySelector('#ao').onclick=()=>{if(ready())done(i.value.trim())};
+  i.onkeydown=e=>{
+   if(e.key==='Enter'){e.preventDefault();if(ready())done(i.value.trim())}
+   if(e.key==='Escape'){e.preventDefault();if(ready())done(null)}};
   setTimeout(()=>{i.focus();i.select()},30)})}
 
 function dlg(msg,btns,sel,spot){return new Promise(r=>{
+  const t0=Date.now(),ready=()=>Date.now()-t0>350;
   const o=document.createElement('div');o.className='ov';
   let hole=null,place=null;
   if(spot){
@@ -170,14 +173,14 @@ function dlg(msg,btns,sel,spot){return new Promise(r=>{
      'width:'+(rc.width+q*2)+'px;height:'+(rc.height+q*2)+'px'};
    o.append(hole);addEventListener('resize',place)}
   const done=v=>{if(place)removeEventListener('resize',place);o.remove();r(v)};
-  o.onclick=e=>{if(e.target===o)done(-1)};
+  o.onclick=e=>{if(e.target===o&&ready())done(-1)};
   const d=document.createElement('div');d.className='dlg';
   const p=document.createElement('p');p.textContent=msg;
   const row=document.createElement('div');row.className='row';
   const hi=sel===undefined?0:sel;
   btns.forEach((b,i)=>{const el=document.createElement('button');
     el.textContent=b;if(i===hi)el.className='p';
-    el.onclick=()=>done(i);row.append(el)});
+    el.onclick=()=>{if(ready())done(i)};row.append(el)});
   d.append(p,row);o.append(d);document.body.append(o);
   if(place)requestAnimationFrame(place);
   (row.children[hi]||row.firstChild).focus()})}

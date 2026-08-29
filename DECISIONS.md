@@ -458,3 +458,13 @@ part of the document — the page cannot see it, style it or hide it, and the ri
 Hide option writes a browser preference that no extension API can set. Since it cannot be
 fixed, the wizard's last step tells the user how to hide it themselves, and the README
 says the same. Do not go looking for a CSS or DOM solution; there isn't one.
+
+**Dialogs ignore anything that arrives in their first 350ms.** Adding a tile chains three
+dialogs, and confirming one with the Enter key was closing the next one too: the key that
+dismissed the address prompt reached the icon dialog's primary button, which `dlg()`
+focuses as soon as it opens, so "Default" was chosen before the question was ever visible.
+Both `ask()` and `dlg()` now record their open time and drop activations earlier than
+350ms — a person cannot read a dialog and answer it faster than that, so nothing
+deliberate is lost, while an inherited keypress always is. `ask()` also calls
+`preventDefault()` on the Enter and Escape it handles, so the key produces no further
+default action after the dialog goes away.
