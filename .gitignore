@@ -8,3 +8,6 @@ profiles/
 # generated from what is already tracked.
 store/*.zip
 store/*.png
+
+# Full-resolution screenshot originals: the sized copies in media/ are what ship.
+screenshots-full/
