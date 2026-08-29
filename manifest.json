@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Home Screen New Tab",
-  "version": "1.0",
+  "version": "1.1",
   "description": "A new tab page laid out like a phone home screen: app grid, clock, search, weather and a sunrise countdown.",
   "icons": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" },
   "permissions": ["favicon", "downloads"],
