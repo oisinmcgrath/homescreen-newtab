@@ -22,6 +22,14 @@ background:#ff3b30;color:#fff;border-radius:50%;font:16px/22px system-ui;font-we
 text-align:center;box-shadow:0 1px 4px #0007;z-index:2}
 body.e .del{display:block}
 .drag{opacity:.35}
+/* Drop feedback: a bar in the gap for an insert, a ring on the icon for a folder.
+   The bar sits in the 14px grid gap, so it never overlaps a neighbouring tile. */
+.tile[data-dz=before]::after,.tile[data-dz=after]::after{
+content:"";position:absolute;top:0;height:69px;width:3px;border-radius:2px;
+background:#1a86f0;box-shadow:0 0 7px #1a86f0cc;z-index:3}
+.tile[data-dz=before]::after{left:-8px}
+.tile[data-dz=after]::after{right:-8px}
+.tile[data-dz=into] .i{outline:3px solid #1a86f0;outline-offset:2px}
 body.e .i{animation:w .4s infinite alternate}
 @keyframes w{from{transform:rotate(-1.5deg)}to{transform:rotate(1.5deg)}}
 #clk{position:fixed;top:8px;right:22px;font-size:84px;font-weight:300;text-shadow:0 2px 12px #000d,0 0 4px #000b,0 0 2px #000a}

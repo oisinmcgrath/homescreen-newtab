@@ -80,7 +80,11 @@ auto-trimmed and normalised to a 512px square by `autotrim()` before storage.
   and the solar countdown, then the location picker. Everything defaults to on if a step
   is dismissed. Create a new profile confirms first, offers to save the current profile,
   then clears tiles, `feat`, `wxloc`, `wx` and `profname`.
-- Drag a tile onto another to create a folder; drag onto a folder to add. Back arrow
+- Dragging a tile onto the **middle** of another creates a folder (or adds to one, if the
+  target already is a folder); dragging onto its **left or right quarter** inserts the
+  tile at that position instead, and dropping on empty grid space moves it to the end.
+  A blue bar in the gap or a ring on the icon shows which will happen. Dragging a folder
+  always reorders, since folders cannot nest. Back arrow
   (top left) leaves a folder. To get a tile back out, drag it onto the back arrow, or
   use "Move out of folder" in its edit-mode menu; either empties and removes the folder
   if it was the last one in it.

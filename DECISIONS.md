@@ -404,3 +404,20 @@ Three practical traps, all of which cost a round trip:
 
 Review is expected to be slower than average: new tab overrides are a known abuse category
 and get extra scrutiny. That is not a signal about this extension.
+
+**Dropping a tile is three gestures, decided by where in the target it lands.** Before
+this, any tile dropped on any tile made a folder, so there was no way to reorder the grid
+at all — the reorder branch only ever ran for a folder being dragged. `zone()` splits the
+target: the outer 28% on either side inserts before or after it, the middle 44% makes a
+folder or adds to an existing one. A folder being dragged always inserts, since folders do
+not nest.
+
+The index arithmetic is the part worth stating: the source is spliced out first, which
+shifts the target's index down by one whenever the source sat before it. So the insertion
+point is `di < i ? i - 1 : i`, plus one more for an "after" drop. Getting this wrong is
+invisible in one direction and off by one in the other, which is exactly the bug that was
+here previously.
+
+A blue bar in the grid gap or a ring on the icon shows which of the three will happen
+before the user commits, because the zones are otherwise invisible. The bar is sized to
+the 69px icon rather than the whole tile, so it does not run down beside the label.

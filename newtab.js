@@ -274,6 +274,15 @@ async function menu(t,L,i){
   if(k==='Move out of folder'){unfolder(L,i);return}
   save();draw()}
 
+// iOS behaviour: the middle of a tile makes a folder, the edges insert beside it.
+// A folder cannot go inside a folder, so dragging one always reorders.
+function zone(e,el,src,t){
+ const r=el.getBoundingClientRect(),x=(e.clientX-r.left)/r.width;
+ if(x<0.28)return 'before';
+ if(x>0.72)return 'after';
+ return src&&src.f?(x<0.5?'before':'after'):'into'}
+const clearDz=()=>document.querySelectorAll('[data-dz]').forEach(x=>{delete x.dataset.dz});
+
 function draw(){
  const g=$('g');g.textContent='';
  $('back').style.display=cur===null?'none':'flex';
@@ -290,20 +299,36 @@ function draw(){
   x.onclick=e=>{e.preventDefault();e.stopPropagation();L.splice(i,1);save();draw()};
   a.append(d,s,x);
   a.ondragstart=e=>{di=i;a.classList.add('drag');e.dataTransfer.effectAllowed='move'};
-  a.ondragend=()=>{a.classList.remove('drag');di=null;save();draw()};
-  a.ondragover=e=>e.preventDefault();
+  a.ondragend=()=>{a.classList.remove('drag');clearDz();di=null;save();draw()};
+  a.ondragover=e=>{e.preventDefault();
+    if(di===null||di===i)return;
+    a.dataset.dz=zone(e,a,L[di],t)};
+  a.ondragleave=()=>{delete a.dataset.dz};
   a.ondrop=e=>{e.preventDefault();e.stopPropagation();
+    const z=a.dataset.dz;clearDz();
     if(di===null||di===i)return;
     const src=L[di];
-    if(t.f&&!src.f){t.f.push(src);L.splice(di,1)}
-    else if(!t.f&&!src.f){const nf={n:'Folder',f:[t,src]};
-      L.splice(i,1,nf);L.splice(di,1)}
-    else L.splice(di<i?i-1:i,0,L.splice(di,1)[0]);
+    if(z==='into'){
+      if(t.f)t.f.push(src),L.splice(di,1);
+      else{const nf={n:'Folder',f:[t,src]};L.splice(i,1,nf);L.splice(di,1)}}
+    else{
+      // remove first, then convert the target's index to its post-removal position
+      const m=L.splice(di,1)[0];
+      let j=di<i?i-1:i;
+      if(z==='after')j++;
+      L.splice(j,0,m)}
     di=null;save();draw()};
   a.onclick=e=>{
     if(edit){e.preventDefault();e.stopPropagation();menu(t,L,i);return}
     if(t.f){e.preventDefault();cur=T.indexOf(t);draw()}};
-  g.append(a)})}
+  g.append(a)});
+ // empty space past the last tile: move it to the end. Tile drops stop
+ // propagation, so this only ever fires on the bare grid.
+ g.ondragover=e=>{if(di!==null)e.preventDefault()};
+ g.ondrop=e=>{e.preventDefault();clearDz();
+  if(di===null)return;
+  const M=list();M.push(M.splice(di,1)[0]);
+  di=null;save();draw()}}
 
 const WNAME={wx:'Weather',sol:'Sunrise/sunset',llm:'AI search bar'};
 function paintWp(){const f=feat();
